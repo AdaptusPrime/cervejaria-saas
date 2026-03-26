@@ -1,0 +1,5812 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Cockpit operacional de pedidos da Cervejaria - Sistema enterprise com autocomplete, validações e KPIs dinâmicos"
+    />
+    <title>Pedido - Cervejaria | Cockpit Operacional</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ========================================
+   COCKPIT THEME - CERVEJARIA 
+   ======================================== */
+      :root {
+        --navy: #1a3a5c;
+        --navy-light: #2c5f8a;
+        --navy-dark: #0f2438;
+        --gold: #c8a84b;
+        --gold-light: #e0be6a;
+        --cream: #f8f4ef;
+        --border: #b0bec5;
+        --text: #1c2b3a;
+        --success: #2e7d32;
+        --warning: #f57c00;
+        --error: #c62828;
+        --info: #1565c0;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+        --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+        --radius-sm: 4px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --transition: all 0.2s ease;
+      }
+
+      /* ========================================
+   CSS RESET & BASE
+   ======================================== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: 'Barlow', sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e8eef3 100%);
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.5;
+        min-height: 100vh;
+      }
+
+      *:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 2px;
+      }
+
+      .skip-link {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: var(--navy);
+        color: #fff;
+        padding: 8px 16px;
+        z-index: 9999;
+        transition: top 0.3s;
+      }
+
+      .skip-link:focus {
+        top: 0;
+      }
+
+      /* ========================================
+   BREADCRUMB
+   ======================================== */
+      .cockpit-breadcrumb {
+        max-width: 1600px;
+        margin: 12px auto 0;
+        padding: 0 24px;
+      }
+      .breadcrumb-list {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        list-style: none;
+        font-size: 12px;
+        color: var(--text);
+      }
+      .breadcrumb-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .breadcrumb-sep {
+        color: var(--border);
+        font-size: 14px;
+      }
+      .breadcrumb-current {
+        font-weight: 600;
+        color: var(--navy);
+        font-family: 'Barlow Condensed', sans-serif;
+        letter-spacing: 0.3px;
+      }
+
+      /* ========================================
+   HEADER COCKPIT (FIXO)
+   ======================================== */
+      .cockpit-header {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: var(--navy);
+        box-shadow: var(--shadow-lg);
+        padding: 12px 24px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .cockpit-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .cockpit-brand .logo {
+        font-size: 32px;
+        line-height: 1;
+      }
+
+      .cockpit-brand .brand-text {
+        font-family: 'Barlow Condensed', sans-serif;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+
+      .cockpit-brand .brand-sub {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.5px;
+      }
+
+      .cockpit-search {
+        position: relative;
+        max-width: 400px;
+      }
+
+      .cockpit-search input {
+        width: 100%;
+        padding: 10px 40px 10px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        transition: var(--transition);
+      }
+
+      .cockpit-search input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .cockpit-search input:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--gold);
+        outline: none;
+      }
+
+      .cockpit-search .search-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 16px;
+      }
+
+      .cockpit-search .shortcut-hint {
+        position: absolute;
+        right: 36px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+
+      .cockpit-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .cockpit-actions .btn {
+        background: var(--gold);
+        color: var(--navy);
+        border: none;
+        padding: 8px 16px;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .cockpit-actions .btn:hover {
+        background: var(--gold-light);
+        transform: translateY(-1px);
+      }
+
+      .cockpit-actions .btn.secondary {
+        background: transparent;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .cockpit-actions .btn.secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .cockpit-actions .status-indicators {
+        display: flex;
+        gap: 8px;
+        margin-left: 12px;
+      }
+
+      .cockpit-actions .status-badge {
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .cockpit-actions .status-badge.online {
+        background: rgba(46, 125, 50, 0.2);
+        color: #81c784;
+      }
+
+      /* ========================================
+   MAIN COCKPIT (12-COL GRID)
+   ======================================== */
+      .cockpit-main {
+        max-width: 1600px;
+        margin: 24px auto;
+        padding: 0 24px;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 20px;
+      }
+
+      /* ========================================
+   KPI PANEL
+   ======================================== */
+      .kpi-panel {
+        grid-column: span 12;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      .kpi-card {
+        background: #fff;
+        border-radius: var(--radius-md);
+        padding: 20px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--navy), var(--navy-light));
+      }
+
+      .kpi-card.warning::before {
+        background: linear-gradient(90deg, var(--warning), #ff9800);
+      }
+
+      .kpi-card.success::before {
+        background: linear-gradient(90deg, var(--success), #4caf50);
+      }
+
+      .kpi-card.error::before {
+        background: linear-gradient(90deg, var(--error), #f44336);
+      }
+
+      .kpi-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--navy-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      .kpi-value {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--navy);
+        line-height: 1;
+      }
+
+      .kpi-trend {
+        font-size: 11px;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .kpi-trend.up {
+        color: var(--success);
+      }
+      .kpi-trend.down {
+        color: var(--error);
+      }
+      .kpi-trend.neutral {
+        color: var(--text);
+      }
+
+      .kpi-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+      }
+
+      /* ========================================
+   FORM WIZARD
+   ======================================== */
+      .form-wizard {
+        grid-column: span 8;
+        background: #fff;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      .wizard-header {
+        background: var(--navy);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .wizard-content {
+        padding: 20px;
+      }
+
+      .form-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .form-section {
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: #fafbfc;
+      }
+
+      .section-subtitle {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--gold);
+        letter-spacing: 0.5px;
+      }
+
+      .wizard-step-content {
+        display: none;
+      }
+
+      .wizard-step-content.active {
+        display: block;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .form-row {
+        display: grid;
+        gap: 16px;
+      }
+
+      .form-row.cols-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+      .form-row.cols-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      .form-row.cols-4 {
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .form-group label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--navy-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-family: 'Barlow', sans-serif;
+        transition: var(--transition);
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        border-color: var(--navy-light);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(44, 95, 138, 0.1);
+      }
+
+      .form-group input.valid {
+        border-color: var(--success);
+      }
+
+      .form-group input.invalid {
+        border-color: var(--error);
+      }
+
+      .form-group .validation-msg {
+        font-size: 10px;
+        color: var(--error);
+        margin-top: 4px;
+        display: none;
+      }
+
+      .form-group input.invalid + .validation-msg {
+        display: block;
+      }
+
+      .wizard-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
+        background: #f8f9fa;
+      }
+
+      .wizard-nav .btn {
+        padding: 8px 20px;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 700;
+        font-size: 12px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .wizard-nav .btn-primary {
+        background: var(--navy);
+        color: #fff;
+      }
+
+      .wizard-nav .btn-primary:hover {
+        background: var(--navy-light);
+      }
+
+      .wizard-nav .btn-secondary {
+        background: transparent;
+        color: var(--navy);
+        border: 1px solid var(--border);
+      }
+
+      .wizard-nav .btn-secondary:hover {
+        background: #f0f0f0;
+      }
+
+      /* Botão Cancelar */
+      .wizard-nav .btn-cancel {
+        background: transparent;
+        color: var(--error);
+        border: 1px solid var(--error);
+        padding: 8px 16px;
+        border-radius: var(--radius-sm);
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+      .wizard-nav .btn-cancel:hover {
+        background: #ffebee;
+        transform: translateY(-1px);
+      }
+
+      /* QUICK JUMP BAR */
+      .quick-jump-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 20px;
+        background: var(--cream);
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+      .quick-jump-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--navy-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+      }
+      .quick-jump-btn {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 4px 12px;
+        font-size: 12px;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 600;
+        color: var(--navy);
+        cursor: pointer;
+        transition: var(--transition);
+        letter-spacing: 0.3px;
+      }
+      .quick-jump-btn:hover {
+        background: var(--navy);
+        color: #fff;
+        border-color: var(--navy);
+      }
+
+      /* Campo Nº Pedido — readonly com visual distinto */
+      #pedido-num[readonly] {
+        background: var(--cream) !important;
+        border-color: var(--border) !important;
+        box-shadow: none !important;
+        cursor: default !important;
+      }
+      #pedido-num[readonly]:focus {
+        border-color: var(--border) !important;
+        box-shadow: none !important;
+      }
+
+      /* SEÇÕES COLAPSÁVEIS */
+      .form-section.collapsible .section-subtitle {
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .form-section.collapsible .section-subtitle::after {
+        content: '▲';
+        font-size: 10px;
+        color: var(--navy-light);
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+        margin-left: 8px;
+      }
+      .form-section.collapsible.collapsed .section-subtitle::after {
+        transform: rotate(180deg);
+      }
+      .section-collapsible-body {
+        overflow: hidden;
+        transition:
+          max-height 0.25s ease,
+          opacity 0.2s ease;
+        max-height: 2000px;
+        opacity: 1;
+      }
+      .form-section.collapsible.collapsed .section-collapsible-body {
+        max-height: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* GLOSSÁRIO INLINE — Tooltips para siglas */
+      .sigla {
+        cursor: help;
+        border-bottom: 1px dotted var(--navy-light);
+        position: relative;
+        display: inline-block;
+        color: var(--navy);
+        font-weight: 600;
+      }
+      .sigla::after {
+        content: attr(data-gloss);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--navy-dark);
+        color: #fff;
+        padding: 5px 10px;
+        border-radius: var(--radius-sm);
+        font-size: 11px;
+        font-family: 'Barlow', sans-serif;
+        font-weight: 400;
+        max-width: 260px;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.4;
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.15s ease;
+        z-index: 100;
+        box-shadow: var(--shadow-md);
+      }
+      .sigla::before {
+        content: '';
+        position: absolute;
+        bottom: calc(100% + 2px);
+        left: 50%;
+        transform: translateX(-50%);
+        border: 4px solid transparent;
+        border-top-color: var(--navy-dark);
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.15s ease;
+      }
+      .sigla:hover::after,
+      .sigla:focus::after,
+      .sigla:hover::before,
+      .sigla:focus::before {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      /* SISTEMA DE TAGS */
+      .tags-system {
+        margin-top: 8px;
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-sm);
+        padding: 8px;
+        background: #fafbfc;
+      }
+      .tags-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--navy-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+      .tags-predefined {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+      .tag-pill.inactive {
+        background: #f0f0f0;
+        color: #666;
+        border-color: #ddd;
+      }
+      .tag-pill.inactive:hover {
+        background: #e8eef4;
+        border-color: var(--navy-light);
+        color: var(--navy);
+      }
+      .tag-pill.active {
+        color: #fff;
+        border-color: transparent;
+      }
+      .tag-pill .tag-remove {
+        font-size: 12px;
+        line-height: 1;
+        opacity: 0.7;
+        margin-left: 2px;
+      }
+      .tag-pill .tag-remove:hover {
+        opacity: 1;
+      }
+      .tags-active {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 4px;
+        min-height: 0;
+      }
+      .tags-custom-row input {
+        width: 100%;
+        padding: 4px 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        font-family: 'Barlow', sans-serif;
+        background: #fff;
+        transition: var(--transition);
+      }
+      .tags-custom-row input:focus {
+        border-color: var(--navy-light);
+        outline: none;
+      }
+
+      /* SHORTCUTS PANEL INLINE */
+      .shortcuts-panel {
+        background: #fff;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .shortcuts-panel-body {
+        padding: 10px;
+        overflow: hidden;
+        max-height: 400px;
+        transition:
+          max-height 0.25s ease,
+          opacity 0.2s ease;
+        opacity: 1;
+      }
+      .shortcuts-panel-body.collapsed {
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+      .shortcuts-grid-inline {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+      }
+      .si-item {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        padding: 4px 6px;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+        font-size: 11px;
+      }
+      .si-item kbd {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        padding: 1px 4px;
+        font-size: 10px;
+        font-family: monospace;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .si-item .si-blank {
+        background: transparent;
+        border-color: transparent;
+        width: 0;
+        padding: 0;
+      }
+      .si-item span {
+        color: var(--text);
+        font-size: 10px;
+        margin-left: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* ========================================
+   SIDEBAR
+   ======================================== */
+      .sidebar {
+        grid-column: span 4;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .timeline-panel {
+        background: #fff;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      .panel-header {
+        background: var(--navy);
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .panel-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      .panel-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .panel-actions .btn-icon {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        font-size: 14px;
+        padding: 4px;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+      }
+
+      .panel-actions .btn-icon:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+
+      .timeline-content {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 16px;
+      }
+
+      .timeline-item {
+        position: relative;
+        padding-left: 24px;
+        padding-bottom: 16px;
+        border-left: 2px solid var(--border);
+      }
+
+      .timeline-item:last-child {
+        border-left-color: transparent;
+      }
+
+      .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 0;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--navy);
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px var(--navy);
+      }
+
+      .timeline-item.success::before {
+        background: var(--success);
+      }
+      .timeline-item.warning::before {
+        background: var(--warning);
+      }
+      .timeline-item.error::before {
+        background: var(--error);
+      }
+
+      .timeline-time {
+        font-size: 10px;
+        color: #888;
+        margin-bottom: 4px;
+      }
+
+      .timeline-text {
+        font-size: 12px;
+        color: var(--text);
+        line-height: 1.4;
+      }
+
+      /* ========================================
+   PRODUCTS TABLE
+   ======================================== */
+      .products-section {
+        grid-column: span 12;
+        background: #fff;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      .section-header {
+        background: var(--navy);
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .section-header .section-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+
+      .section-header .section-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .products-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .products-table thead {
+        background: var(--navy-light);
+      }
+
+      .products-table thead th {
+        color: #fff;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        padding: 12px 8px;
+        text-align: left;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .products-table thead th:last-child {
+        border-right: none;
+        width: 80px;
+      }
+
+      .products-table tbody tr {
+        border-bottom: 1px solid var(--border);
+        transition: var(--transition);
+      }
+
+      .products-table tbody tr:hover {
+        background: #f5f8fb;
+      }
+
+      .products-table tbody tr.highlight {
+        background: #fff9c4;
+      }
+
+      .products-table td {
+        padding: 8px;
+        border-right: 1px solid var(--border);
+        font-size: 13px;
+      }
+
+      .products-table td:last-child {
+        border-right: none;
+      }
+
+      .products-table td input,
+      .products-table td select {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-family: 'Barlow', sans-serif;
+      }
+
+      .products-table td input:focus,
+      .products-table td select:focus {
+        border-color: var(--navy-light);
+        outline: none;
+      }
+
+      .products-table .num {
+        text-align: right;
+      }
+
+      .products-table .actions {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+      }
+
+      .products-table .btn-action {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 4px;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+      }
+
+      .products-table .btn-action:hover {
+        background: #f0f0f0;
+      }
+
+      .products-table .btn-action.delete:hover {
+        background: #ffebee;
+        color: var(--error);
+      }
+
+      .products-table .status-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: var(--radius-sm);
+        font-size: 10px;
+        font-weight: 600;
+      }
+
+      .products-table .status-badge.ok {
+        background: rgba(46, 125, 50, 0.1);
+        color: var(--success);
+      }
+
+      .products-table .status-badge.low {
+        background: rgba(245, 124, 0, 0.1);
+        color: var(--warning);
+      }
+
+      .products-table .status-badge.critical {
+        background: rgba(198, 40, 40, 0.1);
+        color: var(--error);
+      }
+
+      .products-table tfoot {
+        background: #f8f9fa;
+      }
+
+      .products-table tfoot td {
+        padding: 12px 8px;
+        font-weight: 600;
+      }
+
+      .products-table .total-row {
+        background: #eef4ff;
+      }
+
+      .products-table .grand-total {
+        background: var(--navy);
+      }
+
+      .products-table .grand-total td {
+        color: #fff;
+      }
+
+      /* ========================================
+   EQUIPMENT TABLE
+   ======================================== */
+      .equipment-section {
+        grid-column: span 12;
+        background: #fff;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      .equipment-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .equipment-table thead {
+        background: var(--navy-light);
+      }
+
+      .equipment-table thead th {
+        color: #fff;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        padding: 12px 8px;
+        text-align: left;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .equipment-table thead th:last-child {
+        border-right: none;
+        width: 80px;
+      }
+
+      .equipment-table tbody tr {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .equipment-table td {
+        padding: 8px;
+        border-right: 1px solid var(--border);
+        font-size: 13px;
+      }
+
+      .equipment-table td:last-child {
+        border-right: none;
+      }
+
+      .equipment-table td input,
+      .equipment-table td select {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-family: 'Barlow', sans-serif;
+      }
+
+      .equipment-table .num {
+        text-align: right;
+      }
+
+      .equipment-table .diff-positive {
+        color: var(--error);
+        font-weight: 600;
+      }
+
+      .equipment-table .diff-zero {
+        color: var(--success);
+        font-weight: 600;
+      }
+
+      /* ========================================
+   SIGNATURES
+   ======================================== */
+      .signatures-section {
+        grid-column: span 12;
+        background: #fff;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        padding: 20px;
+      }
+
+      .signatures-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+
+      .signature-box {
+        text-align: center;
+      }
+
+      .signature-canvas {
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-sm);
+        background: #fafafa;
+        cursor: crosshair;
+        touch-action: none;
+      }
+
+      .signature-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--navy-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 8px;
+        margin-bottom: 4px;
+      }
+
+      .signature-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 8px;
+      }
+
+      .signature-actions .btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: var(--radius-sm);
+        font-size: 11px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .signature-actions .btn:hover {
+        background: #f0f0f0;
+      }
+
+      .signature-actions .btn-primary {
+        background: var(--navy);
+        color: #fff;
+        border-color: var(--navy);
+      }
+
+      .signature-actions .btn-primary:hover {
+        background: var(--navy-light);
+      }
+
+      /* ========================================
+   FOOTER CHECKLIST
+   ======================================== */
+      .footer-checklist {
+        grid-column: span 12;
+        background: #fff;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .checklist-items {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .checklist-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+      }
+
+      .checklist-item input[type='checkbox'] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+
+      .checklist-progress {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--navy);
+      }
+
+      .checklist-progress .completed {
+        color: var(--success);
+      }
+
+      /* ========================================
+   DRAWER
+   ======================================== */
+      .drawer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--transition);
+      }
+
+      .drawer-overlay.open {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .drawer {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 400px;
+        height: 100%;
+        background: #fff;
+        box-shadow: var(--shadow-lg);
+        z-index: 2001;
+        transition: right 0.3s ease;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .drawer.open {
+        right: 0;
+      }
+
+      .drawer-header {
+        background: var(--navy);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .drawer-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+
+      .drawer-close {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+      }
+
+      .drawer-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .drawer-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+      }
+
+      .drawer-section {
+        margin-bottom: 24px;
+      }
+
+      .drawer-section-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--navy);
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--gold);
+      }
+
+      .drawer-item {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+
+      .drawer-item:hover {
+        background: #eef4ff;
+        transform: translateX(-4px);
+      }
+
+      .drawer-item-title {
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--navy);
+        margin-bottom: 4px;
+      }
+
+      .drawer-item-desc {
+        font-size: 11px;
+        color: #666;
+      }
+
+      .shortcuts-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .shortcut-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+      }
+
+      .shortcut-item kbd {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 11px;
+        font-family: monospace;
+      }
+
+      /* ========================================
+   TOAST NOTIFICATIONS
+   ======================================== */
+      .toast-container {
+        position: fixed;
+        top: 80px;
+        right: 24px;
+        z-index: 3000;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .toast {
+        min-width: 300px;
+        max-width: 400px;
+        padding: 16px 20px;
+        background: #fff;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation: slideIn 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .toast::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+      }
+
+      .toast.success::before {
+        background: var(--success);
+      }
+      .toast.warning::before {
+        background: var(--warning);
+      }
+      .toast.error::before {
+        background: var(--error);
+      }
+      .toast.info::before {
+        background: var(--info);
+      }
+
+      .toast-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      .toast.success .toast-icon {
+        color: var(--success);
+      }
+      .toast.warning .toast-icon {
+        color: var(--warning);
+      }
+      .toast.error .toast-icon {
+        color: var(--error);
+      }
+      .toast.info .toast-icon {
+        color: var(--info);
+      }
+
+      .toast-content {
+        flex: 1;
+      }
+
+      .toast-title {
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+
+      .toast-message {
+        font-size: 12px;
+        color: #666;
+        line-height: 1.4;
+      }
+
+      .toast-close {
+        background: transparent;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px;
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
+      }
+
+      .toast-close:hover {
+        background: #f0f0f0;
+        color: #333;
+      }
+
+      /* ========================================
+   RESPONSIVIDADE
+   ======================================== */
+      @media (max-width: 1440px) {
+        .cockpit-main {
+          grid-template-columns: repeat(8, 1fr);
+        }
+
+        .form-wizard {
+          grid-column: span 6;
+        }
+
+        .sidebar {
+          grid-column: span 2;
+        }
+      }
+
+      @media (max-width: 1024px) {
+        .cockpit-main {
+          grid-template-columns: 1fr;
+        }
+
+        .form-wizard,
+        .sidebar,
+        .products-section,
+        .equipment-section,
+        .signatures-section,
+        .footer-checklist {
+          grid-column: span 1;
+        }
+
+        .drawer {
+          width: 100%;
+          right: -100%;
+        }
+
+        .signatures-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .shortcuts-panel {
+          display: none;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .cockpit-header {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .cockpit-search {
+          max-width: 100%;
+        }
+
+        .cockpit-actions {
+          flex-wrap: wrap;
+        }
+
+        .kpi-panel {
+          grid-template-columns: 1fr;
+        }
+
+        .form-row.cols-2,
+        .form-row.cols-3,
+        .form-row.cols-4 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ========================================
+   PRINT STYLES
+   ======================================== */
+      @media print {
+        /* Impressão gerenciada por printOrder() — usar Ctrl+P ou botão Imprimir */
+        body {
+          display: none !important;
+        }
+      }
+
+      /* ========================================
+   ACCESSIBILITY
+   ======================================== */
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (prefers-contrast: high) {
+        :root {
+          --border: #000;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Skip Link para Acessibilidade -->
+    <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+
+    <!-- ========================================
+     HEADER COCKPIT FIXO
+     ======================================== -->
+    <header class="cockpit-header" role="banner">
+      <div class="cockpit-brand">
+        <span class="logo">🍺</span>
+        <div>
+          <div class="brand-text">CERVEJARIA</div>
+          <div class="brand-sub">Sistema de Pedidos Enterprise</div>
+        </div>
+      </div>
+
+      <div class="cockpit-search">
+        <input
+          type="text"
+          id="global-search"
+          placeholder="Buscar em todo o formulário..."
+          aria-label="Busca global"
+          autocomplete="off"
+        />
+        <span class="search-icon">🔍</span>
+        <span class="shortcut-hint">Ctrl+K</span>
+      </div>
+
+      <div class="cockpit-actions">
+        <button class="btn secondary" onclick="newOrder()" aria-label="Novo pedido">📄 Novo</button>
+        <button class="btn secondary" onclick="exportJSON()" aria-label="Exportar JSON">
+          📤 Exportar
+        </button>
+        <button class="btn secondary" onclick="importCSV()" aria-label="Importar CSV">
+          📥 Importar
+        </button>
+        <button class="btn" onclick="printOrder()" aria-label="Imprimir pedido">🖨 Imprimir</button>
+        <button class="btn secondary" onclick="toggleDrawer()" aria-label="Abrir assistente">
+          💡 Assistente
+        </button>
+
+        <div class="status-indicators">
+          <span class="status-badge online">● Online</span>
+          <span class="status-badge" id="autosave-status">💾 Autosave</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- BREADCRUMB -->
+    <nav class="cockpit-breadcrumb" aria-label="Navegação estrutural">
+      <ol class="breadcrumb-list">
+        <li class="breadcrumb-item">
+          <span>🏠</span>
+          <span>Início</span>
+        </li>
+        <li class="breadcrumb-sep" aria-hidden="true">›</li>
+        <li class="breadcrumb-item">
+          <span>Pedidos</span>
+        </li>
+        <li class="breadcrumb-sep" aria-hidden="true">›</li>
+        <li class="breadcrumb-item breadcrumb-current" aria-current="page">
+          <span id="breadcrumb-pedido-label">Novo Pedido</span>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- ========================================
+     MAIN COCKPIT CONTENT
+     ======================================== -->
+    <main class="cockpit-main" id="main-content" role="main">
+      <!-- KPI PANEL -->
+      <section class="kpi-panel" aria-label="Indicadores de performance">
+        <div class="kpi-card">
+          <div class="kpi-label">Total do Pedido</div>
+          <div class="kpi-value" id="kpi-total">R$ 0,00</div>
+          <div class="kpi-trend neutral">
+            <span>0 itens</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Quantidade Total</div>
+          <div class="kpi-value" id="kpi-quantity">0 L</div>
+          <div class="kpi-trend neutral">Volume total</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">
+            <abbr
+              class="sigla"
+              data-gloss="KPI: Key Performance Indicator. Margem Estimada = (Valor Total − Custos) ÷ Valor Total × 100."
+              tabindex="0"
+              >Margem Estimada</abbr
+            >
+          </div>
+          <div class="kpi-value" id="kpi-margin">0%</div>
+          <div class="kpi-trend up">↑ 0% vs meta</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Status do Pedido</div>
+          <div class="kpi-value" id="kpi-status" style="font-size: 20px">Rascunho</div>
+          <div class="kpi-badge" style="background: var(--warning); color: #fff">Em edição</div>
+        </div>
+
+        <div class="kpi-card warning">
+          <div class="kpi-label">Alertas de Estoque</div>
+          <div class="kpi-value" id="kpi-alerts">0</div>
+          <div class="kpi-trend down">Itens com baixo estoque</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-label">Tempo Decorrido</div>
+          <div class="kpi-value" id="kpi-timer">00:00:00</div>
+          <div class="kpi-trend neutral">Desde o início</div>
+        </div>
+      </section>
+
+      <!-- FORM WIZARD -->
+      <section class="form-wizard" aria-label="Formulário do pedido">
+        <div class="wizard-header">
+          <div class="wizard-title">📋 Formulário do Pedido</div>
+        </div>
+
+        <div class="wizard-content form-sections">
+          <!-- SECTION 1: DADOS DO PEDIDO -->
+          <div class="form-section" data-section="1">
+            <h3 class="section-subtitle">📋 Dados do Pedido</h3>
+            <div class="form-grid">
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label for="pedido-num">Nº Pedido</label>
+                  <input
+                    type="text"
+                    id="pedido-num"
+                    readonly
+                    aria-describedby="pedido-num-help"
+                    style="
+                      background: var(--cream);
+                      color: var(--navy);
+                      font-weight: 600;
+                      font-family: 'Barlow Condensed', sans-serif;
+                      letter-spacing: 0.5px;
+                      cursor: default;
+                    "
+                  />
+                  <span
+                    id="pedido-num-help"
+                    style="
+                      font-size: 10px;
+                      color: var(--navy-light);
+                      margin-top: 2px;
+                      display: block;
+                      font-style: italic;
+                    "
+                  >
+                    Gerado automaticamente ao criar o pedido
+                  </span>
+                </div>
+                <div class="form-group">
+                  <label for="pedido-data">Data de Emissão</label>
+                  <input
+                    type="datetime-local"
+                    id="pedido-data"
+                    aria-describedby="pedido-data-help"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="segmento-canal">Segmento de Cliente</label>
+                  <select
+                    id="segmento-canal"
+                    name="segmento_canal"
+                    required
+                    title="Selecione como este cliente se relaciona comercialmente com a cervejaria"
+                  >
+                    <option value="" disabled selected>— Selecione o segmento —</option>
+
+                    <optgroup label="—— B2C ——">
+                      <option
+                        value="CONSUMIDOR_FINAL"
+                        data-canal-venda="B2C"
+                        data-canal-consumo="DIRETO"
+                        title="Pessoa física que compra para consumo próprio — balcão, e-commerce, loja física da cervejaria"
+                      >
+                        👤 Consumidor Final
+                      </option>
+                      <option
+                        value="TAPROOM"
+                        data-canal-venda="B2C"
+                        data-canal-consumo="ON_TRADE"
+                        title="Cliente que consome na própria cervejaria (bar, choperia interna, brewpub)"
+                      >
+                        🍺 Taproom / Consumo no Local
+                      </option>
+                    </optgroup>
+
+                    <optgroup label="—— B2B ——">
+                      <option
+                        value="DISTRIBUIDOR"
+                        data-canal-venda="B2B"
+                        data-canal-consumo="OFF_TRADE"
+                        title="Empresa que compra em grande volume para revender a outros canais — distribuidoras regionais, atacadistas especializados"
+                      >
+                        🚚 Distribuidor / Atacadista
+                      </option>
+                      <option
+                        value="FOOD_SERVICE"
+                        data-canal-venda="B2B"
+                        data-canal-consumo="ON_TRADE"
+                        title="Estabelecimento que serve a cerveja ao consumidor final no local — bares, pubs, restaurantes, churrascarias"
+                      >
+                        🍽️ Food Service (Bar / Restaurante)
+                      </option>
+                      <option
+                        value="VAREJO"
+                        data-canal-venda="B2B"
+                        data-canal-consumo="OFF_TRADE"
+                        title="Loja que revende o produto embalado ao consumidor — empórios, lojas de bebidas, mercados de bairro"
+                      >
+                        🏪 Varejo (Loja / Mercado)
+                      </option>
+                      <option
+                        value="ATACAREJO"
+                        data-canal-venda="B2B"
+                        data-canal-consumo="OFF_TRADE"
+                        title="Canal híbrido atacado + varejo — Atacadão, Assaí, Makro"
+                      >
+                        🏭 Atacarejo
+                      </option>
+                      <option
+                        value="EVENTOS"
+                        data-canal-venda="B2B"
+                        data-canal-consumo="ON_TRADE"
+                        title="Compra pontual para evento específico — casamentos, festivais, feiras, eventos corporativos"
+                      >
+                        🎉 Eventos (Spot / Pontual)
+                      </option>
+                      <option
+                        value="INSTITUCIONAL"
+                        data-canal-venda="B2B"
+                        data-canal-consumo="OFF_TRADE"
+                        title="Clubes, associações, escritórios, condomínios — compra para uso interno, sem revenda"
+                      >
+                        🏛️ Institucional / Corporativo
+                      </option>
+                      <option
+                        value="CERVEJARIA"
+                        data-canal-venda="B2B"
+                        data-canal-consumo="OFF_TRADE"
+                        title="Outras cervejarias que compram produtos para revenda ou uso na produção"
+                      >
+                        🍺 Cervejarias
+                      </option>
+                    </optgroup>
+                    <optgroup label="─────────────">
+                      <option
+                        value="OUTROS"
+                        data-canal-venda="B2B"
+                        data-canal-consumo="OFF_TRADE"
+                        title="Segmento não listado — especifique abaixo"
+                      >
+                        Outros
+                      </option>
+                    </optgroup>
+                  </select>
+                  <div id="segmento-outros-wrap" style="display: none; margin-top: 6px">
+                    <input
+                      type="text"
+                      id="segmento-outros-texto"
+                      name="segmento_outros"
+                      placeholder="Descreva o segmento (ex: Cooperativa, ONG...)"
+                      maxlength="80"
+                      aria-label="Especificação do segmento Outros"
+                    />
+                    <span
+                      style="
+                        font-size: 10px;
+                        color: var(--navy-light);
+                        margin-top: 2px;
+                        display: block;
+                      "
+                    >
+                      Esta informação complementa o segmento selecionado
+                    </span>
+                  </div>
+                  <div class="tags-system" id="tags-system">
+                    <div class="tags-label">Tags do Cliente</div>
+                    <div class="tags-predefined" id="tags-predefined">
+                      <!-- Gerado por JS — renderTagsPredefined() -->
+                    </div>
+                    <div class="tags-active" id="tags-active" aria-live="polite">
+                      <!-- Tags selecionadas — gerado por JS -->
+                    </div>
+                    <div class="tags-custom-row">
+                      <input
+                        type="text"
+                        id="tags-custom-input"
+                        placeholder="+ Adicionar tag customizada"
+                        maxlength="30"
+                        aria-label="Digite uma tag customizada e pressione Enter"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Campos hidden derivados automaticamente -->
+                <input type="hidden" id="canal-venda" name="canal_venda" value="" />
+                <input type="hidden" id="canal-consumo" name="canal_consumo" value="" />
+              </div>
+
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label for="pedido-vendedor">Vendedor</label>
+                  <input
+                    type="text"
+                    id="pedido-vendedor"
+                    placeholder="Nome do vendedor"
+                    list="vendedores-list"
+                    aria-autocomplete="list"
+                  />
+                  <datalist id="vendedores-list">
+                    <!-- MOCK: Lista de vendedores -->
+                    <option value="Carlos Silva"></option>
+                    <option value="Ana Santos"></option>
+                    <option value="Roberto Costa"></option>
+                    <option value="Maria Lima"></option>
+                    <option value="João Oliveira"></option>
+                    <option value="Fernanda Pereira"></option>
+                    <option value="Lucas Rodrigues"></option>
+                    <option value="Juliana Almeida"></option>
+                    <option value="Pedro Henrique"></option>
+                    <option value="Carla Dias"></option>
+                  </datalist>
+                </div>
+                <div class="form-group">
+                  <label for="pedido-obs">Observações Gerais</label>
+                  <textarea
+                    id="pedido-obs"
+                    rows="2"
+                    placeholder="Observações sobre o pedido"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 2: DADOS DO CLIENTE -->
+          <div class="form-section" data-section="2">
+            <h3 class="section-subtitle">👤 Dados do Cliente</h3>
+            <div class="form-grid">
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label for="cliente-razao">Razão Social</label>
+                  <input
+                    type="text"
+                    id="cliente-razao"
+                    placeholder="Razão social completa"
+                    list="clientes-list"
+                    aria-autocomplete="list"
+                  />
+                  <datalist id="clientes-list">
+                    <!-- MOCK: Lista de clientes -->
+                    <option value="Bar e Lanchonete Central Ltda"></option>
+                    <option value="Restaurante Sabor Caseiro ME"></option>
+                    <option value="Pub Rock'n'Beer"></option>
+                    <option value="Choperia do Porto"></option>
+                    <option value="Boteco da Esquina"></option>
+                    <option value="Bar da Praia"></option>
+                    <option value="Cantina Italiana"></option>
+                    <option value="Restaurante Família Silva"></option>
+                    <option value="Lanchonete do João"></option>
+                    <option value="Bar do Zé"></option>
+                  </datalist>
+                </div>
+                <div class="form-group">
+                  <label for="cliente-fantasia">Nome Fantasia</label>
+                  <input type="text" id="cliente-fantasia" placeholder="Nome fantasia" />
+                </div>
+              </div>
+
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label for="cliente-cnpj">
+                    <abbr
+                      class="sigla"
+                      data-gloss="CNPJ: Cadastro Nacional da Pessoa Jurídica (14 dígitos). CPF: Cadastro de Pessoa Física (11 dígitos)."
+                      tabindex="0"
+                      >CNPJ/CPF</abbr
+                    >
+                  </label>
+                  <input
+                    type="text"
+                    id="cliente-cnpj"
+                    placeholder="00.000.000/0000-00"
+                    maxlength="18"
+                    aria-describedby="cnpj-validation"
+                  />
+                  <span class="validation-msg" id="cnpj-validation">CNPJ/CPF inválido</span>
+                </div>
+                <div class="form-group">
+                  <label for="cliente-ie">
+                    <abbr
+                      class="sigla"
+                      data-gloss="IE: Inscrição Estadual (empresas). RG: Registro Geral (pessoas físicas)."
+                      tabindex="0"
+                      >IE/RG</abbr
+                    >
+                  </label>
+                  <input type="text" id="cliente-ie" placeholder="Inscrição Estadual ou RG" />
+                </div>
+              </div>
+
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label for="cliente-telefone">Telefone</label>
+                  <input
+                    type="tel"
+                    id="cliente-telefone"
+                    placeholder="(00) 0000-0000"
+                    maxlength="14"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="cliente-celular">Celular</label>
+                  <input
+                    type="tel"
+                    id="cliente-celular"
+                    placeholder="(00) 00000-0000"
+                    maxlength="15"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row cols-3">
+                <div class="form-group">
+                  <label for="cliente-cep">CEP</label>
+                  <input
+                    type="text"
+                    id="cliente-cep"
+                    placeholder="00000-000"
+                    maxlength="9"
+                    aria-describedby="cep-help"
+                  />
+                  <span class="validation-msg" id="cep-help"
+                    >Digite o CEP para preencher o endereço</span
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="cliente-cidade">Cidade</label>
+                  <input
+                    type="text"
+                    id="cliente-cidade"
+                    placeholder="Cidade"
+                    list="cidades-list"
+                    aria-autocomplete="list"
+                  />
+                  <datalist id="cidades-list">
+                    <!-- MOCK: Lista de cidades brasileiras -->
+                    <option value="Curitiba - PR"></option>
+                    <option value="São Paulo - SP"></option>
+                    <option value="Rio de Janeiro - RJ"></option>
+                    <option value="Belo Horizonte - MG"></option>
+                    <option value="Porto Alegre - RS"></option>
+                    <option value="Salvador - BA"></option>
+                    <option value="Fortaleza - CE"></option>
+                    <option value="Brasília - DF"></option>
+                    <option value="Manaus - AM"></option>
+                    <option value="Recife - PE"></option>
+                  </datalist>
+                </div>
+                <div class="form-group">
+                  <label>Tipo de Entrega</label>
+                  <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px">
+                    <label
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 12px;
+                        text-transform: none;
+                        letter-spacing: 0;
+                        font-weight: 500;
+                        cursor: pointer;
+                      "
+                    >
+                      <input
+                        type="radio"
+                        name="tipo_entrega"
+                        id="entrega-propria"
+                        value="ENTREGA_PROPRIA"
+                        onchange="onTipoEntregaChange(this)"
+                        checked
+                        style="width: auto; margin: 0"
+                      />
+                      🚚 Entrega pela Cervejaria
+                    </label>
+                    <label
+                      style="
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 12px;
+                        text-transform: none;
+                        letter-spacing: 0;
+                        font-weight: 500;
+                        cursor: pointer;
+                      "
+                    >
+                      <input
+                        type="radio"
+                        name="tipo_entrega"
+                        id="retirada-cliente"
+                        value="RETIRADA_CLIENTE"
+                        onchange="onTipoEntregaChange(this)"
+                        style="width: auto; margin: 0"
+                      />
+                      🏃 Retirada pelo Cliente
+                    </label>
+                  </div>
+                  <input
+                    type="hidden"
+                    id="tipo-entrega-value"
+                    name="tipo_entrega"
+                    value="ENTREGA_PROPRIA"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row cols-2">
+                <div class="form-group">
+                  <label for="cliente-endereco">Endereço</label>
+                  <input type="text" id="cliente-endereco" placeholder="Rua, número, complemento" />
+                </div>
+                <div class="form-group">
+                  <label for="cliente-pagamento">Forma de Pagamento</label>
+                  <select id="cliente-pagamento">
+                    <option value="">Selecione...</option>
+                    <option value="boleto">Boleto Bancário</option>
+                    <option value="pix">PIX</option>
+                    <option value="cartao">Cartão de Crédito</option>
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="prazo">Prazo (30/60/90)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: CONDIÇÕES -->
+          <div class="form-section collapsible" data-section="3" id="section-condicoes">
+            <h3
+              class="section-subtitle"
+              onclick="toggleSection('section-condicoes')"
+              aria-expanded="true"
+              aria-controls="section-condicoes-body"
+              title="Clique para recolher/expandir"
+            >
+              💰 Condições de Pagamento
+            </h3>
+            <div class="section-collapsible-body" id="section-condicoes-body">
+              <div class="form-grid">
+                <div class="form-row cols-2">
+                  <div class="form-group">
+                    <label for="tabela-preco">Tabela de Preços</label>
+                    <select
+                      id="tabela-preco"
+                      name="tabela_preco"
+                      onchange="onTabelaPrecoChange(this)"
+                    >
+                      <option value="">— Selecione a tabela —</option>
+                      <option value="PADRAO" data-descricao="Preços de balcão / consumidor">
+                        📋 Tabela Padrão
+                      </option>
+                      <option
+                        value="ATACADO"
+                        data-descricao="Preços para distribuidores e atacarejo"
+                      >
+                        🚚 Tabela Atacado
+                      </option>
+                      <option value="FOOD_SVC" data-descricao="Preços para bares e restaurantes">
+                        🍽️ Tabela Food Service
+                      </option>
+                      <option value="PROMO" data-descricao="Promoções e combos sazonais">
+                        🎉 Tabela Promoção
+                      </option>
+                    </select>
+                    <span
+                      id="tabela-preco-desc"
+                      style="font-size: 10px; color: var(--navy-light); margin-top: 2px"
+                    ></span>
+                  </div>
+                  <div class="form-group">
+                    <label for="condicao-pagamento">Condição de Pagamento</label>
+                    <select id="condicao-pagamento">
+                      <option value="30">30 dias</option>
+                      <option value="30-60">30/60 dias</option>
+                      <option value="30-60-90">30/60/90 dias</option>
+                      <option value="vista">À vista</option>
+                      <option value="entrada">Entrada + 30/60</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="condicao-desconto">Desconto Global (R$)</label>
+                    <div style="position: relative; display: flex; align-items: center; gap: 8px">
+                      <input
+                        type="text"
+                        id="condicao-desconto"
+                        placeholder="R$ 0,00"
+                        inputmode="decimal"
+                        autocomplete="off"
+                        style="flex: 1"
+                        oninput="onGlobalDiscountInput(this)"
+                      />
+                      <span
+                        id="condicao-desconto-pct"
+                        style="
+                          font-size: 11px;
+                          color: var(--navy-light);
+                          white-space: nowrap;
+                          min-width: 40px;
+                        "
+                        >0%</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row cols-1">
+                  <div class="form-group">
+                    <label for="condicao-obs">Observações de Pagamento</label>
+                    <textarea
+                      id="condicao-obs"
+                      rows="3"
+                      placeholder="Observações sobre condições de pagamento"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Jump Bar -->
+        <div class="quick-jump-bar" aria-label="Acesso rápido às seções">
+          <span class="quick-jump-label">Ir para:</span>
+          <button
+            class="quick-jump-btn"
+            onclick="scrollToSection('products-section')"
+            title="Ir direto para Tabela de Produtos"
+          >
+            🍺 Produtos
+          </button>
+          <button
+            class="quick-jump-btn"
+            onclick="scrollToSection('equipment-section')"
+            title="Ir direto para Equipamentos"
+          >
+            🛢️ Equipamentos
+          </button>
+          <button
+            class="quick-jump-btn"
+            onclick="scrollToSection('signatures-section')"
+            title="Ir direto para Assinaturas"
+          >
+            ✍️ Assinaturas
+          </button>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="wizard-nav">
+          <button
+            class="btn btn-cancel"
+            onclick="cancelOrder()"
+            aria-label="Cancelar pedido e descartar alterações"
+            title="Cancela o pedido atual e descarta todas as alterações"
+          >
+            ✕ Cancelar
+          </button>
+          <div style="display: flex; gap: 8px">
+            <button class="btn btn-secondary" onclick="saveManual()">💾 Salvar</button>
+            <button class="btn btn-primary" onclick="validateAndComplete()">
+              ✓ Concluir Pedido
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <!-- Timeline Panel -->
+        <section class="timeline-panel" aria-label="Timeline de eventos">
+          <div class="panel-header">
+            <div class="panel-title">📅 Timeline de Eventos</div>
+            <div class="panel-actions">
+              <button class="btn-icon" onclick="clearTimeline()" aria-label="Limpar timeline">
+                🗑️
+              </button>
+              <button class="btn-icon" onclick="filterTimeline()" aria-label="Filtrar eventos">
+                🔍
+              </button>
+            </div>
+          </div>
+          <div class="timeline-content" id="timeline-content" role="log" aria-live="polite">
+            <!-- Timeline items serão adicionados via JS -->
+          </div>
+        </section>
+
+        <!-- Shortcuts Panel -->
+        <section class="shortcuts-panel" aria-label="Atalhos de teclado">
+          <div class="panel-header">
+            <div class="panel-title">⌨️ Atalhos</div>
+            <div class="panel-actions">
+              <button
+                class="btn-icon"
+                onclick="toggleShortcutsPanel()"
+                id="shortcuts-toggle-btn"
+                aria-label="Recolher painel de atalhos"
+                title="Recolher/expandir"
+              >
+                ▲
+              </button>
+            </div>
+          </div>
+          <div class="shortcuts-panel-body" id="shortcuts-panel-body">
+            <div class="shortcuts-grid-inline">
+              <div class="si-item"><kbd>Ctrl</kbd><kbd>K</kbd><span>Busca</span></div>
+              <div class="si-item"><kbd>Ctrl</kbd><kbd>S</kbd><span>Salvar</span></div>
+              <div class="si-item"><kbd>Ctrl</kbd><kbd>P</kbd><span>Imprimir</span></div>
+              <div class="si-item"><kbd>Ctrl</kbd><kbd>N</kbd><span>Novo</span></div>
+              <div class="si-item"><kbd>Ctrl</kbd><kbd>E</kbd><span>Export</span></div>
+              <div class="si-item"><kbd>Ctrl</kbd><kbd>I</kbd><span>Import</span></div>
+              <div class="si-item"><kbd>Ctrl⇧</kbd><kbd>A</kbd><span>Assist.</span></div>
+              <div class="si-item"><kbd>Ctrl⇧</kbd><kbd>R</kbd><span>Reset</span></div>
+              <div class="si-item"><kbd>F1</kbd><kbd class="si-blank"></kbd><span>Ajuda</span></div>
+              <div class="si-item">
+                <kbd>Esc</kbd><kbd class="si-blank"></kbd><span>Fechar</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- PRODUCTS TABLE -->
+      <section class="products-section" aria-labelledby="produtos-heading">
+        <div class="section-header">
+          <h2 id="produtos-heading" class="section-title" role="heading" aria-level="2">
+            📦 Produtos
+          </h2>
+          <div class="section-actions">
+            <button class="btn btn-secondary" onclick="addProductRow()">+ Adicionar Produto</button>
+          </div>
+        </div>
+
+        <!-- Datalist compartilhado para produtos (A3 fix) -->
+        <datalist id="produtos-list">
+          <!-- Opções serão preenchidas via JS -->
+        </datalist>
+
+        <table class="products-table" id="products-table">
+          <thead>
+            <tr>
+              <th style="width: 25%">Produto</th>
+              <th style="width: 15%">Tipo Equipamento</th>
+              <th style="width: 12%">Operação</th>
+              <th style="width: 10%">Qtde (L)</th>
+              <th style="width: 12%">Preço Unit.</th>
+              <th style="width: 10%">Desconto</th>
+              <th style="width: 12%">Valor</th>
+              <th style="width: 6%">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="products-body">
+            <!-- Linhas serão adicionadas via JS -->
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td colspan="3" style="text-align: right; font-size: 12px; color: #666">TOTAIS</td>
+              <td class="num" id="total-qtde">0</td>
+              <td></td>
+              <td class="num" id="total-desc">R$ 0,00</td>
+              <td class="num" id="total-valor">R$ 0,00</td>
+              <td></td>
+            </tr>
+            <tr class="grand-total">
+              <td
+                colspan="6"
+                style="
+                  text-align: right;
+                  letter-spacing: 1px;
+                  font-family: 'Barlow Condensed', sans-serif;
+                  font-size: 13px;
+                "
+              >
+                VALOR TOTAL DO PEDIDO
+              </td>
+              <td class="num" id="grand-total">R$ 0,00</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+
+      <!-- EQUIPMENT TABLE -->
+      <section class="equipment-section" aria-label="Tabela de equipamentos">
+        <div class="section-header">
+          <div class="section-title">🍺 Equipamentos / Retorno</div>
+          <div class="section-actions">
+            <button class="btn btn-secondary" onclick="addEquipRow()">
+              + Adicionar Equipamento
+            </button>
+          </div>
+        </div>
+
+        <table class="equipment-table" id="equipment-table">
+          <thead>
+            <tr>
+              <th style="width: 35%">Tipo de Equipamento</th>
+              <th style="width: 20%">Barril</th>
+              <th style="width: 15%">Qtde Saída</th>
+              <th style="width: 15%">Qtde Retorno</th>
+              <th class="th-retorno-data" style="width: 15%; display: none">Prev. Retorno</th>
+              <th style="width: 10%">Diferença</th>
+            </tr>
+          </thead>
+          <tbody id="equipment-body">
+            <!-- Linhas serão adicionadas via JS -->
+          </tbody>
+        </table>
+      </section>
+
+      <!-- SIGNATURES -->
+      <section class="signatures-section" aria-label="Assinaturas digitais">
+        <div class="signatures-grid">
+          <div class="signature-box">
+            <canvas
+              class="signature-canvas"
+              id="sig-responsavel"
+              width="300"
+              height="100"
+              aria-label="Área de assinatura do responsável"
+            ></canvas>
+            <div class="signature-label">Responsável</div>
+            <div class="signature-actions">
+              <button class="btn" onclick="clearSignature('sig-responsavel')">Limpar</button>
+              <button class="btn btn-primary" onclick="saveSignature('sig-responsavel')">
+                Salvar
+              </button>
+            </div>
+          </div>
+
+          <div class="signature-box">
+            <canvas
+              class="signature-canvas"
+              id="sig-cliente"
+              width="300"
+              height="100"
+              aria-label="Área de assinatura do cliente"
+            ></canvas>
+            <div class="signature-label">Cliente</div>
+            <div class="signature-actions">
+              <button class="btn" onclick="clearSignature('sig-cliente')">Limpar</button>
+              <button class="btn btn-primary" onclick="saveSignature('sig-cliente')">Salvar</button>
+            </div>
+          </div>
+
+          <div class="signature-box">
+            <canvas
+              class="signature-canvas"
+              id="sig-testemunha"
+              width="300"
+              height="100"
+              aria-label="Área de assinatura da testemunha"
+            ></canvas>
+            <div class="signature-label">Testemunha</div>
+            <div class="signature-actions">
+              <button class="btn" onclick="clearSignature('sig-testemunha')">Limpar</button>
+              <button class="btn btn-primary" onclick="saveSignature('sig-testemunha')">
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER CHECKLIST -->
+      <footer class="footer-checklist" aria-label="Checklist de conferência">
+        <div class="checklist-items">
+          <label class="checklist-item">
+            <input type="checkbox" id="check-1" />
+            <span>Dados do cliente preenchidos</span>
+          </label>
+          <label class="checklist-item">
+            <input type="checkbox" id="check-2" />
+            <span>Produtos adicionados</span>
+          </label>
+          <label class="checklist-item">
+            <input type="checkbox" id="check-3" />
+            <span>Equipamentos registrados</span>
+          </label>
+          <label class="checklist-item">
+            <input type="checkbox" id="check-4" />
+            <span>Assinaturas coletadas</span>
+          </label>
+        </div>
+        <div class="checklist-progress">
+          <span class="completed" id="checklist-completed">0</span>/4 completos
+        </div>
+      </footer>
+    </main>
+
+    <!-- ========================================
+     DRAWER ASSISTENTE
+     ======================================== -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+    <aside class="drawer" id="drawer" role="dialog" aria-labelledby="drawer-title">
+      <div class="drawer-header">
+        <div class="drawer-title" id="drawer-title">💡 Assistente Inteligente</div>
+        <button class="drawer-close" onclick="closeDrawer()" aria-label="Fechar assistente">
+          ×
+        </button>
+      </div>
+
+      <div class="drawer-content">
+        <!-- Autocomplete Rápido -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">⚡ Ações Rápidas</div>
+          <div class="drawer-item" onclick="autoFillAddress()">
+            <div class="drawer-item-title">📍 Preencher Endereço via CEP</div>
+            <div class="drawer-item-desc">Preenche automaticamente endereço usando CEP</div>
+          </div>
+          <div class="drawer-item" onclick="applyPromoCombo()">
+            <div class="drawer-item-title">🎉 Aplicar Combo Promocional</div>
+            <div class="drawer-item-desc">Adiciona produtos em combo com desconto</div>
+          </div>
+          <div class="drawer-item" onclick="validateOrder()">
+            <div class="drawer-item-title">✅ Validar Pedido</div>
+            <div class="drawer-item-desc">Verifica campos obrigatórios e consistência</div>
+          </div>
+        </div>
+
+        <!-- Sugestões Inteligentes -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">💡 Sugestões Inteligentes</div>
+          <div id="suggestions-container">
+            <!-- Sugestões serão adicionadas via JS -->
+          </div>
+        </div>
+
+        <!-- Atalhos de Teclado -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">⌨️ Atalhos de Teclado</div>
+          <div class="shortcuts-list">
+            <div class="shortcut-item">
+              <span>Busca global</span>
+              <kbd>Ctrl + K</kbd>
+            </div>
+            <div class="shortcut-item">
+              <span>Salvar manual</span>
+              <kbd>Ctrl + S</kbd>
+            </div>
+            <div class="shortcut-item">
+              <span>Imprimir</span>
+              <kbd>Ctrl + P</kbd>
+            </div>
+            <div class="shortcut-item">
+              <span>Novo pedido</span>
+              <kbd>Ctrl + N</kbd>
+            </div>
+            <div class="shortcut-item">
+              <span>Exportar JSON</span>
+              <kbd>Ctrl + E</kbd>
+            </div>
+            <div class="shortcut-item">
+              <span>Importar CSV</span>
+              <kbd>Ctrl + I</kbd>
+            </div>
+            <div class="shortcut-item">
+              <span>Assistente</span>
+              <kbd>Ctrl + Shift + A</kbd>
+            </div>
+            <div class="shortcut-item">
+              <span>Resetar</span>
+              <kbd>Ctrl + Shift + R</kbd>
+            </div>
+            <div class="shortcut-item">
+              <span>Ajuda</span>
+              <kbd>F1</kbd>
+            </div>
+            <div class="shortcut-item">
+              <span>Fechar drawer</span>
+              <kbd>Esc</kbd>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================
+     TOAST CONTAINER
+     ======================================== -->
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- ========================================
+     JAVASCRIPT - STATE MANAGEMENT & LOGIC
+     ======================================== -->
+    <script>
+      // ========================================
+      // MOCK DATA - LISTAS DE AUTOCOMPLETE
+      // ========================================
+
+      // MOCK: Lista de 50+ produtos
+      const PRODUTOS_MOCK = [
+        { nome: 'Chopp Pilsen 20L', tipo: 'Barril 20L', preco: 180.0, estoque: 50 },
+        { nome: 'Chopp Pilsen 30L', tipo: 'Barril 30L', preco: 250.0, estoque: 30 },
+        { nome: 'Chopp Pilsen 50L', tipo: 'Barril 50L', preco: 380.0, estoque: 20 },
+        { nome: 'Chopp Golden 20L', tipo: 'Barril 20L', preco: 200.0, estoque: 45 },
+        { nome: 'Chopp Golden 30L', tipo: 'Barril 30L', preco: 280.0, estoque: 25 },
+        { nome: 'Chopp Golden 50L', tipo: 'Barril 50L', preco: 420.0, estoque: 15 },
+        { nome: 'Chopp IPA 20L', tipo: 'Barril 20L', preco: 220.0, estoque: 35 },
+        { nome: 'Chopp IPA 30L', tipo: 'Barril 30L', preco: 300.0, estoque: 20 },
+        { nome: 'Chopp IPA 50L', tipo: 'Barril 50L', preco: 450.0, estoque: 10 },
+        { nome: 'Chopp Weiss 20L', tipo: 'Barril 20L', preco: 210.0, estoque: 40 },
+        { nome: 'Chopp Weiss 30L', tipo: 'Barril 30L', preco: 290.0, estoque: 22 },
+        { nome: 'Chopp Weiss 50L', tipo: 'Barril 50L', preco: 430.0, estoque: 12 },
+        { nome: 'Chopp Red Ale 20L', tipo: 'Barril 20L', preco: 230.0, estoque: 30 },
+        { nome: 'Chopp Red Ale 30L', tipo: 'Barril 30L', preco: 310.0, estoque: 18 },
+        { nome: 'Chopp Red Ale 50L', tipo: 'Barril 50L', preco: 460.0, estoque: 8 },
+        { nome: 'Cerveja Pilsen Lata 350ml', tipo: 'Lata', preco: 4.5, estoque: 500 },
+        { nome: 'Cerveja Pilsen Long Neck 355ml', tipo: 'Garrafa', preco: 5.0, estoque: 400 },
+        { nome: 'Cerveja Golden Lata 350ml', tipo: 'Lata', preco: 5.0, estoque: 450 },
+        { nome: 'Cerveja Golden Long Neck 355ml', tipo: 'Garrafa', preco: 5.5, estoque: 350 },
+        { nome: 'Cerveja IPA Lata 350ml', tipo: 'Lata', preco: 6.0, estoque: 300 },
+        { nome: 'Cerveja IPA Long Neck 355ml', tipo: 'Garrafa', preco: 6.5, estoque: 250 },
+        { nome: 'Cerveja Weiss Lata 350ml', tipo: 'Lata', preco: 5.5, estoque: 320 },
+        { nome: 'Cerveja Weiss Long Neck 355ml', tipo: 'Garrafa', preco: 6.0, estoque: 280 },
+        { nome: 'Cerveja Red Ale Lata 350ml', tipo: 'Lata', preco: 6.5, estoque: 280 },
+        { nome: 'Cerveja Red Ale Long Neck 355ml', tipo: 'Garrafa', preco: 7.0, estoque: 220 },
+        { nome: 'Chopp Pilsen 5L Keg', tipo: 'Keg 5L', preco: 55.0, estoque: 100 },
+        { nome: 'Chopp Golden 5L Keg', tipo: 'Keg 5L', preco: 60.0, estoque: 80 },
+        { nome: 'Chopp IPA 5L Keg', tipo: 'Keg 5L', preco: 65.0, estoque: 60 },
+        { nome: 'Chopp Weiss 5L Keg', tipo: 'Keg 5L', preco: 62.0, estoque: 70 },
+        { nome: 'Chopp Red Ale 5L Keg', tipo: 'Keg 5L', preco: 68.0, estoque: 50 },
+        { nome: 'Cerveja Pilsen Garrafa 600ml', tipo: 'Garrafa', preco: 8.0, estoque: 200 },
+        { nome: 'Cerveja Golden Garrafa 600ml', tipo: 'Garrafa', preco: 9.0, estoque: 180 },
+        { nome: 'Cerveja IPA Garrafa 600ml', tipo: 'Garrafa', preco: 10.0, estoque: 150 },
+        { nome: 'Cerveja Weiss Garrafa 600ml', tipo: 'Garrafa', preco: 9.5, estoque: 160 },
+        { nome: 'Cerveja Red Ale Garrafa 600ml', tipo: 'Garrafa', preco: 10.5, estoque: 140 },
+        { nome: 'Chopp Pilsen Barril 10L', tipo: 'Barril 10L', preco: 100.0, estoque: 60 },
+        { nome: 'Chopp Golden Barril 10L', tipo: 'Barril 10L', preco: 110.0, estoque: 55 },
+        { nome: 'Chopp IPA Barril 10L', tipo: 'Barril 10L', preco: 120.0, estoque: 45 },
+        { nome: 'Chopp Weiss Barril 10L', tipo: 'Barril 10L', preco: 115.0, estoque: 50 },
+        { nome: 'Chopp Red Ale Barril 10L', tipo: 'Barril 10L', preco: 125.0, estoque: 40 },
+        { nome: 'Cerveja Pilsen Lata 473ml', tipo: 'Lata', preco: 5.5, estoque: 350 },
+        { nome: 'Cerveja Golden Lata 473ml', tipo: 'Lata', preco: 6.0, estoque: 300 },
+        { nome: 'Cerveja IPA Lata 473ml', tipo: 'Lata', preco: 7.0, estoque: 250 },
+        { nome: 'Cerveja Weiss Lata 473ml', tipo: 'Lata', preco: 6.5, estoque: 280 },
+        { nome: 'Cerveja Red Ale Lata 473ml', tipo: 'Lata', preco: 7.5, estoque: 220 },
+        { nome: 'Chopp Stout 20L', tipo: 'Barril 20L', preco: 240.0, estoque: 25 },
+        { nome: 'Chopp Stout 30L', tipo: 'Barril 30L', preco: 320.0, estoque: 15 },
+        { nome: 'Chopp Stout 50L', tipo: 'Barril 50L', preco: 480.0, estoque: 5 },
+      ];
+
+      // Inicializar datalist de produtos (A3 fix)
+      function initProdutosDatalist() {
+        const datalist = document.getElementById('produtos-list');
+        if (!datalist) return;
+        datalist.innerHTML = PRODUTOS_MOCK.map(
+          (p) =>
+            `<option value="${p.nome}" data-preco="${p.preco}" data-estoque="${p.estoque}" data-tipo="${p.tipo}">`
+        ).join('');
+      }
+
+      // MOCK: Multiplicadores por tabela de preço
+      const TABELAS_PRECO = {
+        PADRAO: { multiplicador: 1.0, label: 'Tabela Padrão' },
+        ATACADO: { multiplicador: 0.82, label: 'Tabela Atacado' }, // 18% off
+        FOOD_SVC: { multiplicador: 0.9, label: 'Food Service' }, // 10% off
+        PROMO: { multiplicador: 0.75, label: 'Promoção' }, // 25% off
+      };
+
+      function onTabelaPrecoChange(select) {
+        const tabela = TABELAS_PRECO[select.value];
+        const descEl = document.getElementById('tabela-preco-desc');
+
+        if (!tabela) {
+          if (descEl) descEl.textContent = '';
+          return;
+        }
+
+        const selected = select.options[select.selectedIndex];
+        if (descEl) descEl.textContent = selected.dataset.descricao || '';
+
+        // Re-precificar todos os itens já na tabela
+        document.querySelectorAll('#products-body tr').forEach((row) => {
+          const inputs = row.querySelectorAll('input');
+          const produtoNome = inputs[0]?.value;
+          if (!produtoNome) return;
+
+          const produtoMock = PRODUTOS_MOCK.find((p) => p.nome === produtoNome);
+          if (produtoMock) {
+            const novoPreco = produtoMock.preco * tabela.multiplicador;
+            inputs[3].value = formatCurrency(novoPreco);
+            const qtdeInput = inputs[2];
+            if (qtdeInput) calculateRow(qtdeInput);
+          }
+        });
+
+        addTimelineEvent('update', `Tabela de preço aplicada: ${tabela.label}`);
+        calculateTotals();
+      }
+
+      // Autoselect de tabela ao mudar segmento_canal
+      function autoSelectTabelaBySegmento(segmento) {
+        const map = {
+          CONSUMIDOR_FINAL: 'PADRAO',
+          TAPROOM: 'PADRAO',
+          DISTRIBUIDOR: 'ATACADO',
+          FOOD_SERVICE: 'FOOD_SVC',
+          VAREJO: 'PADRAO',
+          ATACAREJO: 'ATACADO',
+          EVENTOS: 'PROMO',
+          INSTITUCIONAL: 'PADRAO',
+          CERVEJARIA: 'ATACADO',
+        };
+        const tabelaId = map[segmento];
+        const tabelaSelect = document.getElementById('tabela-preco');
+        if (tabelaSelect && tabelaId) {
+          tabelaSelect.value = tabelaId;
+          onTabelaPrecoChange(tabelaSelect);
+        }
+      }
+
+      // MOCK: Lista de equipamentos
+      const EQUIPAMENTOS_MOCK = [
+        'Barril 20L Alumínio',
+        'Barril 30L Alumínio',
+        'Barril 50L Alumínio',
+        'Barril 20L Aço Inox',
+        'Barril 30L Aço Inox',
+        'Barril 50L Aço Inox',
+        'Keg 5L Plástico',
+        'Keg 5L Alumínio',
+        'Torre de Chopp 2 Vias',
+        'Torre de Chopp 4 Vias',
+        'Regulador de Pressão',
+        'Mangueira Chopp 3m',
+        'Mangueira Chopp 5m',
+        'Cilindro CO2 10kg',
+        'Cilindro CO2 20kg',
+        'Cilindro N2 10kg',
+        'Cilindro N2 20kg',
+        'Garrafa PET 500ml',
+        'Garrafa PET 1L',
+        'Garrafa de Vidro 355ml',
+      ];
+
+      // ========================================
+      // STATE MANAGEMENT (VANILLA JS)
+      // ========================================
+
+      const state = {
+        pedido: {
+          id: null,
+          data: null,
+          vendedor: null,
+          observacoes: null,
+          segmento_canal: '',
+          canal_venda: '',
+          canal_consumo: '',
+          tabela_preco: '',
+          tipo_entrega: 'ENTREGA_PROPRIA',
+          cliente: {
+            razao: null,
+            fantasia: null,
+            cnpj: null,
+            ie: null,
+            telefone: null,
+            celular: null,
+            cep: null,
+            endereco: null,
+            cidade: null,
+            pagamento: null,
+          },
+          condicao: {
+            pagamento: null,
+            desconto: 0,
+            observacoes: null,
+          },
+          itens: [],
+          equipamentos: [],
+          status: 'rascunho',
+          assinaturas: {
+            responsavel: null,
+            cliente: null,
+            testemunha: null,
+          },
+        },
+        ui: {
+          drawerOpen: false,
+          notifications: [],
+          timeline: [],
+          currentStep: 1,
+          searchResults: [],
+        },
+        config: {
+          autosaveInterval: 30000,
+          theme: 'default',
+        },
+      };
+
+      // Observer pattern para reatividade
+      const observers = [];
+
+      function subscribe(callback) {
+        observers.push(callback);
+      }
+
+      function notify() {
+        observers.forEach((callback) => callback(state));
+      }
+
+      // Actions
+      function updatePedido(data) {
+        state.pedido = { ...state.pedido, ...data };
+        addTimelineEvent('update', 'Pedido atualizado');
+        notify();
+      }
+
+      function addItem(item) {
+        state.pedido.itens.push(item);
+        addTimelineEvent('add', `Item adicionado: ${item.produto}`);
+        notify();
+      }
+
+      function removeItem(index) {
+        const item = state.pedido.itens[index];
+        state.pedido.itens.splice(index, 1);
+        addTimelineEvent('remove', `Item removido: ${item.produto}`);
+        notify();
+      }
+
+      function addEquipamento(equip) {
+        state.pedido.equipamentos.push(equip);
+        addTimelineEvent('add', `Equipamento adicionado: ${equip.tipo}`);
+        notify();
+      }
+
+      function addTimelineEvent(type, message) {
+        state.ui.timeline.unshift({
+          type,
+          message,
+          timestamp: new Date(),
+        });
+        if (state.ui.timeline.length > 50) {
+          state.ui.timeline.pop();
+        }
+        renderTimeline();
+      }
+
+      // Selectors
+      function getPedido() {
+        return state.pedido;
+      }
+
+      function getItens() {
+        return state.pedido.itens;
+      }
+
+      function getStatus() {
+        return state.pedido.status;
+      }
+
+      // ========================================
+      // UTILITÁRIOS
+      // ========================================
+
+      // Debounce para performance
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
+
+      // Throttle para performance
+      function throttle(func, limit) {
+        let inThrottle;
+        return function (...args) {
+          if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => (inThrottle = false), limit);
+          }
+        };
+      }
+
+      // Formatação moeda pt-BR
+      function formatCurrency(value) {
+        return new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+        }).format(value);
+      }
+
+      // Parse moeda pt-BR
+      function parseCurrency(str) {
+        if (!str) return 0;
+        return parseFloat(str.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+      }
+
+      // Formatação data pt-BR
+      function formatDate(date) {
+        return new Intl.DateTimeFormat('pt-BR', {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        }).format(date);
+      }
+
+      // ========================================
+      // MÁSCARAS DE INPUT
+      // ========================================
+
+      // Máscara CNPJ
+      function maskCNPJ(value) {
+        return value
+          .replace(/\D/g, '')
+          .replace(/^(\d{2})(\d)/, '$1.$2')
+          .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+          .replace(/\.(\d{3})(\d)/, '.$1/$2')
+          .replace(/(\d{4})(\d)/, '$1-$2')
+          .slice(0, 18);
+      }
+
+      // Máscara CPF
+      function maskCPF(value) {
+        return value
+          .replace(/\D/g, '')
+          .replace(/(\d{3})(\d)/, '$1.$2')
+          .replace(/(\d{3})(\d)/, '$1.$2')
+          .replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+          .slice(0, 14);
+      }
+
+      // Máscara CEP
+      function maskCEP(value) {
+        return value
+          .replace(/\D/g, '')
+          .replace(/(\d{5})(\d)/, '$1-$2')
+          .slice(0, 9);
+      }
+
+      // Máscara Telefone
+      function maskPhone(value) {
+        return value
+          .replace(/\D/g, '')
+          .replace(/(\d{2})(\d)/, '($1) $2')
+          .replace(/(\d{4})(\d)/, '$1-$2')
+          .slice(0, 14);
+      }
+
+      // Máscara Celular
+      function maskCell(value) {
+        return value
+          .replace(/\D/g, '')
+          .replace(/(\d{2})(\d)/, '($1) $2')
+          .replace(/(\d{5})(\d)/, '$1-$2')
+          .slice(0, 15);
+      }
+
+      // ========================================
+      // VALIDAÇÕES
+      // ========================================
+
+      // Valida CNPJ
+      function validateCNPJ(cnpj) {
+        cnpj = cnpj.replace(/[^\d]/g, '');
+        if (cnpj.length !== 14) return false;
+
+        // Algoritmo de validação CNPJ
+        let size = cnpj.length - 2;
+        let numbers = cnpj.substring(0, size);
+        const digits = cnpj.substring(size);
+        let sum = 0;
+        let pos = size - 7;
+
+        for (let i = size; i >= 1; i--) {
+          sum += numbers.charAt(size - i) * pos--;
+          if (pos < 2) pos = 9;
+        }
+
+        let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+        if (result !== parseInt(digits.charAt(0))) return false;
+
+        size = size + 1;
+        numbers = cnpj.substring(0, size);
+        sum = 0;
+        pos = size - 7;
+
+        for (let i = size; i >= 1; i--) {
+          sum += numbers.charAt(size - i) * pos--;
+          if (pos < 2) pos = 9;
+        }
+
+        result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+        return result === parseInt(digits.charAt(1));
+      }
+
+      // Valida CPF
+      function validateCPF(cpf) {
+        cpf = cpf.replace(/[^\d]/g, '');
+        if (cpf.length !== 11) return false;
+
+        // Algoritmo de validação CPF
+        let sum = 0;
+        for (let i = 0; i < 9; i++) {
+          sum += parseInt(cpf.charAt(i)) * (10 - i);
+        }
+        let digit = 11 - (sum % 11);
+        if (digit === 10 || digit === 11) digit = 0;
+        if (digit !== parseInt(cpf.charAt(9))) return false;
+
+        sum = 0;
+        for (let i = 0; i < 10; i++) {
+          sum += parseInt(cpf.charAt(i)) * (11 - i);
+        }
+        digit = 11 - (sum % 11);
+        if (digit === 10 || digit === 11) digit = 0;
+        return digit === parseInt(cpf.charAt(10));
+      }
+
+      // Valida email
+      function validateEmail(email) {
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+      }
+
+      // ========================================
+      // TOAST NOTIFICATIONS
+      // ========================================
+
+      function showToast(type, title, message, duration = 3000) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        const icons = {
+          success: '✓',
+          warning: '⚠',
+          error: '✕',
+          info: 'ℹ',
+        };
+
+        toast.innerHTML = `
+    <span class="toast-icon">${icons[type]}</span>
+    <div class="toast-content">
+      <div class="toast-title">${title}</div>
+      <div class="toast-message">${message}</div>
+    </div>
+    <button class="toast-close" onclick="this.parentElement.remove()" aria-label="Fechar notificação">×</button>
+  `;
+
+        container.appendChild(toast);
+
+        // Auto dismiss
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateX(100%)';
+          setTimeout(() => toast.remove(), 300);
+        }, duration);
+
+        // Limit to 5 toasts
+        while (container.children.length > 5) {
+          container.removeChild(container.firstChild);
+        }
+      }
+
+      // ========================================
+      // TIMELINE
+      // ========================================
+
+      function renderTimeline() {
+        const container = document.getElementById('timeline-content');
+        container.innerHTML = state.ui.timeline
+          .map((event) => {
+            const typeClasses = {
+              add: 'success',
+              remove: 'warning',
+              update: 'info',
+              error: 'error',
+            };
+
+            return `
+      <div class="timeline-item ${typeClasses[event.type] || ''}">
+        <div class="timeline-time">${formatDate(event.timestamp)}</div>
+        <div class="timeline-text">${event.message}</div>
+      </div>
+    `;
+          })
+          .join('');
+      }
+
+      function clearTimeline() {
+        state.ui.timeline = [];
+        renderTimeline();
+        showToast('info', 'Timeline', 'Timeline limpa com sucesso');
+      }
+
+      function filterTimeline() {
+        // Implementar filtro de timeline
+        showToast('info', 'Filtro', 'Funcionalidade de filtro em desenvolvimento');
+      }
+
+      // WIZARD - Todas as seções são exibidas simultaneamente
+      // Funções de navegação removidas - não há mais paginação
+
+      function validateAndComplete() {
+        const isValid = validateOrder();
+        if (isValid) {
+          state.pedido.status = 'emitido';
+          updatePedido({ status: 'emitido' });
+          showToast('success', 'Pedido Concluído', 'Pedido validado e pronto para envio');
+          document.getElementById('kpi-status').textContent = 'Emitido';
+        }
+      }
+
+      // Handler do campo de desconto global (formatação monetária)
+      function onGlobalDiscountInput(input) {
+        // Remove tudo que não é dígito ou vírgula/ponto
+        let raw = input.value.replace(/[^\d,\.]/g, '');
+
+        // Se o usuário digitou vírgula ou ponto, tratar como separador decimal direto
+        if (raw.includes(',') || raw.includes('.')) {
+          raw = raw.replace(',', '.');
+          const numeric = parseFloat(raw) || 0;
+          input.value = formatCurrency(numeric);
+        } else {
+          // Sem separador: assume que cada 2 últimos dígitos são centavos (estilo PDV)
+          const digits = raw.replace(/\D/g, '');
+          const numeric = parseInt(digits || '0') / 100;
+          input.value = formatCurrency(numeric);
+        }
+
+        calculateTotals();
+      }
+
+      function onOperacaoChange(select) {
+        const row = select.closest('tr');
+        const operacao = select.value;
+
+        // Bonificação e Permuta: zerar preço unitário (sem valor financeiro)
+        const precoInput = row.querySelector('[data-field="preco"]');
+        if (operacao === 'BONIFICACAO' || operacao === 'PERMUTA') {
+          if (precoInput) {
+            precoInput.value = formatCurrency(0);
+            precoInput.readOnly = true;
+            precoInput.style.background = '#f0f0f0';
+          }
+          row.style.background = operacao === 'BONIFICACAO' ? '#f0fff4' : '#fff8e1';
+        } else {
+          if (precoInput) {
+            precoInput.readOnly = false;
+            precoInput.style.background = '';
+          }
+          row.style.background = '';
+        }
+
+        // Consignado: verificar se deve exibir alerta de retorno de equipamento
+        if (operacao === 'CONSIGNADO') {
+          checkEquipRetornoVisibility();
+          showToast(
+            'info',
+            'Consignado',
+            'Lembre-se de registrar a previsão de retorno dos equipamentos.'
+          );
+        }
+
+        // Usar seletor específico com data-field (M2 fix)
+        const qtdeInput = row.querySelector('[data-field="qtde"]');
+        if (qtdeInput) calculateRow(qtdeInput);
+        addTimelineEvent('update', `Operação alterada para: ${operacao}`);
+      }
+
+      // ========================================
+      // PRODUCTS TABLE
+      // ========================================
+
+      function addProductRow() {
+        const MAX_PRODUTOS = 50;
+        const tbody = document.getElementById('products-body');
+        if (tbody.children.length >= MAX_PRODUTOS) {
+          showToast('warning', 'Limite', `Máximo de ${MAX_PRODUTOS} produtos atingido`);
+          return;
+        }
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+    <td>
+      <input 
+        type="text" 
+        list="produtos-list" 
+        placeholder="Nome do produto"
+        aria-autocomplete="list"
+        onchange="onProductChange(this)"
+        data-field="produto"
+      >
+    </td>
+    <td>
+      <input type="text" placeholder="Tipo de equipamento" readonly data-field="tipo">
+    </td>
+    <td>
+      <select name="tipo_operacao" onchange="onOperacaoChange(this)" data-field="operacao">
+        <option value="">— Tipo —</option>
+        <option value="VENDA">💰 Venda</option>
+        <option value="CONSIGNADO">🔄 Consignado</option>
+        <option value="TROCA">↔️ Troca</option>
+        <option value="PERMUTA">🤝 Permuta</option>
+        <option value="BONIFICACAO">🎁 Bonificação</option>
+      </select>
+    </td>
+    <td>
+      <input type="number" placeholder="0" min="0" step="1" class="num" oninput="onQuantityChange(this)" data-field="qtde">
+    </td>
+    <td>
+      <input type="text" placeholder="R$ 0,00" class="num" oninput="onPriceChange(this)" data-field="preco">
+    </td>
+    <td>
+      <input type="text" placeholder="R$ 0,00" class="num" oninput="onDiscountChange(this)" data-field="desconto">
+    </td>
+    <td class="num valor-col" style="background: #f0f8ff; font-weight: 600;" data-field="valor">R$ 0,00</td>
+    <td class="actions">
+      <button class="btn-action" onclick="duplicateProductRow(this)" aria-label="Duplicar linha">📋</button>
+      <button class="btn-action delete" onclick="removeProductRow(this)" aria-label="Remover linha">✕</button>
+    </td>
+  `;
+        tbody.appendChild(tr);
+
+        // Focus no primeiro input
+        tr.querySelector('input').focus();
+
+        addTimelineEvent('add', 'Nova linha de produto adicionada');
+        calculateTotals();
+      }
+
+      function removeProductRow(btn) {
+        const row = btn.closest('tr');
+        row.remove();
+        addTimelineEvent('remove', 'Linha de produto removida');
+        calculateTotals();
+      }
+
+      function duplicateProductRow(btn) {
+        const row = btn.closest('tr');
+        // Coletar valores usando data-field em vez de índice posicional
+        const produto = row.querySelector('[data-field="produto"]')?.value || '';
+        const tipo = row.querySelector('[data-field="tipo"]')?.value || '';
+        const operacao = row.querySelector('[data-field="operacao"]')?.value || '';
+        const qtde = row.querySelector('[data-field="qtde"]')?.value || '';
+        const preco = row.querySelector('[data-field="preco"]')?.value || '';
+        const desconto = row.querySelector('[data-field="desconto"]')?.value || '';
+        const valor = row.querySelector('[data-field="valor"]')?.textContent || '';
+
+        addProductRow();
+        const newRow = document.getElementById('products-body').lastElementChild;
+
+        // Aplicar valores
+        const newProduto = newRow.querySelector('[data-field="produto"]');
+        const newTipo = newRow.querySelector('[data-field="tipo"]');
+        const newOperacao = newRow.querySelector('[data-field="operacao"]');
+        const newQtde = newRow.querySelector('[data-field="qtde"]');
+        const newPreco = newRow.querySelector('[data-field="preco"]');
+        const newDesconto = newRow.querySelector('[data-field="desconto"]');
+        const newValor = newRow.querySelector('[data-field="valor"]');
+
+        if (newProduto) newProduto.value = produto;
+        if (newTipo) newTipo.value = tipo;
+        if (newOperacao) newOperacao.value = operacao;
+        if (newQtde) newQtde.value = qtde;
+        if (newPreco) {
+          newPreco.value = preco;
+          // Garantir que readOnly não seja herdado incorretamente (A1 fix)
+          newPreco.readOnly = false;
+          newPreco.style.background = '';
+        }
+        if (newDesconto) newDesconto.value = desconto;
+        if (newValor) newValor.textContent = valor || 'R$ 0,00';
+
+        // Recalcular a linha duplicada imediatamente (C2 fix)
+        if (newQtde) calculateRow(newQtde);
+
+        addTimelineEvent('add', 'Linha de produto duplicada');
+        calculateTotals();
+      }
+
+      // Event handlers com debounce
+      const onQuantityChange = debounce(function (input) {
+        calculateRow(input);
+      }, 300);
+
+      const onPriceChange = debounce(function (input) {
+        calculateRow(input);
+      }, 300);
+
+      const onDiscountChange = debounce(function (input) {
+        calculateRow(input);
+      }, 300);
+
+      function onProductChange(input) {
+        // Proteção contra input.list null (M1 fix)
+        if (!input.list) return;
+        const selectedOption = Array.from(input.list.options).find(
+          (opt) => opt.value === input.value
+        );
+        if (selectedOption) {
+          const preco = selectedOption.dataset.preco;
+          const estoque = selectedOption.dataset.estoque;
+          const tipo = selectedOption.dataset.tipo;
+
+          const row = input.closest('tr');
+          // Usar data-field em vez de índice posicional (C1 fix)
+          const tipoInput = row.querySelector('[data-field="tipo"]');
+          const precoInput = row.querySelector('[data-field="preco"]');
+          if (tipoInput) tipoInput.value = tipo;
+
+          // Aplicar multiplicador da tabela ativa
+          const tabelaAtiva = document.getElementById('tabela-preco')?.value;
+          let precoFinal = parseFloat(preco);
+          if (tabelaAtiva && TABELAS_PRECO[tabelaAtiva]) {
+            precoFinal = precoFinal * TABELAS_PRECO[tabelaAtiva].multiplicador;
+          }
+          if (precoInput) precoInput.value = formatCurrency(precoFinal);
+
+          // Verificar estoque baixo
+          if (parseInt(estoque) < 10) {
+            showToast(
+              'warning',
+              'Estoque Baixo',
+              `Produto com apenas ${estoque} unidades em estoque`
+            );
+          }
+
+          addTimelineEvent('update', `Produto selecionado: ${input.value}`);
+        }
+        calculateRow(input);
+      }
+
+      function calculateRow(input) {
+        const row = input.closest('tr');
+        // Usar data-field em vez de índice posicional (C1 fix)
+        const qtdeInput = row.querySelector('[data-field="qtde"]');
+        const precoInput = row.querySelector('[data-field="preco"]');
+        const descontoInput = row.querySelector('[data-field="desconto"]');
+        const valorCol = row.querySelector('[data-field="valor"]');
+
+        const qtde = parseFloat(qtdeInput?.value) || 0;
+        const preco = parseCurrency(precoInput?.value);
+        const desconto = parseCurrency(descontoInput?.value);
+
+        const valor = qtde * preco - desconto;
+        if (valorCol) valorCol.textContent = formatCurrency(valor > 0 ? valor : 0);
+
+        calculateTotals();
+      }
+
+      function calculateTotals() {
+        let totalQtde = 0;
+        let totalDesc = 0;
+        let totalValor = 0;
+        let lowStockCount = 0;
+
+        document.querySelectorAll('#products-body tr').forEach((tr) => {
+          // Usar data-field em vez de índice posicional (C1 fix)
+          const qtdeInput = tr.querySelector('[data-field="qtde"]');
+          const descontoInput = tr.querySelector('[data-field="desconto"]');
+          const valorCol = tr.querySelector('[data-field="valor"]');
+
+          const qtde = parseFloat(qtdeInput?.value) || 0;
+          // Proteger parseCurrency contra NaN (M4 fix)
+          const desconto = parseCurrency(descontoInput?.value);
+          const valor = parseCurrency(valorCol?.textContent);
+          const descontoValido = isNaN(desconto) ? 0 : desconto;
+          const valorValido = isNaN(valor) ? 0 : valor;
+
+          totalQtde += qtde;
+          totalDesc += descontoValido;
+          totalValor += valorValido;
+
+          // Verificar estoque baixo (mock)
+          if (qtde > 20) {
+            lowStockCount++;
+          }
+        });
+
+        // Aplicar desconto global com validação de limite (C3 fix)
+        const descontoGlobalStr = document.getElementById('condicao-desconto').value;
+        let descontoGlobal = parseCurrency(descontoGlobalStr);
+        // Validar: desconto não pode ser maior que o total
+        if (descontoGlobal > totalValor) {
+          descontoGlobal = totalValor;
+          document.getElementById('condicao-desconto').value = formatCurrency(totalValor);
+          showToast('warning', 'Desconto', 'Desconto ajustado ao valor total do pedido');
+        }
+        // Sincronizar state (C3 fix)
+        state.pedido.condicao = state.pedido.condicao || {};
+        state.pedido.condicao.desconto = descontoGlobal;
+
+        const totalComDesconto = Math.max(0, totalValor - descontoGlobal);
+
+        // Atualizar percentual exibido ao lado do campo
+        const pct = totalValor > 0 ? ((descontoGlobal / totalValor) * 100).toFixed(1) : '0.0';
+        const pctEl = document.getElementById('condicao-desconto-pct');
+        if (pctEl) pctEl.textContent = pct + '%';
+
+        // Atualizar KPIs
+        document.getElementById('kpi-total').textContent = formatCurrency(totalComDesconto);
+        document.getElementById('kpi-quantity').textContent = `${totalQtde} L`;
+        document.getElementById('kpi-alerts').textContent = lowStockCount;
+        document.getElementById('total-qtde').textContent = totalQtde;
+        document.getElementById('total-desc').textContent = formatCurrency(totalDesc);
+        document.getElementById('total-valor').textContent = formatCurrency(totalValor);
+        document.getElementById('grand-total').textContent = formatCurrency(totalComDesconto);
+
+        // Calcular margem - mock com aviso (A2 fix)
+        const margem = totalValor > 0 ? (((totalValor * 0.3) / totalValor) * 100).toFixed(1) : 0;
+        const margemEl = document.getElementById('kpi-margin');
+        if (margemEl) {
+          margemEl.textContent = `${margem}%`;
+          // Adicionar indicador visual de que é estimativa
+          margemEl.title = 'Margem estimada (cálculo demonstrativo - não inclui custos reais)';
+        }
+
+        // Atualizar checklist
+        updateChecklist();
+      }
+
+      // ========================================
+      // EQUIPMENT TABLE
+      // ========================================
+
+      function addEquipRow() {
+        const tbody = document.getElementById('equipment-body');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+    <td>
+      <input 
+        type="text" 
+        list="equipamentos-list" 
+        placeholder="Tipo de equipamento"
+        aria-autocomplete="list"
+      >
+      <datalist id="equipamentos-list-${Date.now()}">
+        ${EQUIPAMENTOS_MOCK.map((e) => `<option value="${e}">`).join('')}
+      </datalist>
+    </td>
+    <td>
+      <input type="text" placeholder="Barril">
+    </td>
+    <td>
+      <input type="number" placeholder="0" min="0" class="num" oninput="calculateEquipDiff(this)">
+    </td>
+    <td>
+      <input type="number" placeholder="0" min="0" class="num" oninput="calculateEquipDiff(this)">
+    </td>
+    <td class="equip-retorno-col">
+      <input
+        type="date"
+        class="equip-data-retorno"
+        placeholder="dd/mm/aaaa"
+        title="Data prevista para retorno do equipamento"
+        style="display:none"
+      >
+      <span class="equip-comodato-badge"
+        style="display:none; font-size:10px; color:var(--navy-light); font-style:italic;">
+        Comodato
+      </span>
+    </td>
+    <td class="num">0</td>
+  `;
+        tbody.appendChild(tr);
+
+        tr.querySelector('input').focus();
+        addTimelineEvent('add', 'Nova linha de equipamento adicionada');
+        checkEquipRetornoVisibility();
+      }
+
+      function calculateEquipDiff(input) {
+        const row = input.closest('tr');
+        const inputs = row.querySelectorAll('input');
+        const saida = parseInt(inputs[2].value) || 0; // Qtde Saída
+        const retorno = parseInt(inputs[3].value) || 0; // Qtde Retorno
+        const diff = saida - retorno;
+
+        const diffCell = row.querySelector('.num:last-child');
+        diffCell.textContent = diff;
+        diffCell.className = diff > 0 ? 'num diff-positive' : 'num diff-zero';
+      }
+
+      // Segmentos que EXIGEM data de retorno
+      const SEGMENTOS_COM_RETORNO = new Set([
+        'CONSUMIDOR_FINAL',
+        'TAPROOM',
+        'EVENTOS',
+        'INSTITUCIONAL',
+      ]);
+
+      function checkEquipRetornoVisibility() {
+        const segmento = document.getElementById('segmento-canal')?.value || '';
+        const exigeRetorno = SEGMENTOS_COM_RETORNO.has(segmento);
+
+        // Atualizar thead — mostrar/ocultar coluna de cabeçalho
+        const thRetorno = document.querySelector('#equipment-table thead .th-retorno-data');
+        if (thRetorno) {
+          thRetorno.style.display = exigeRetorno ? '' : 'none';
+        }
+
+        document.querySelectorAll('#equipment-body tr').forEach((row) => {
+          const dataInput = row.querySelector('.equip-data-retorno');
+          const comodatoBadge = row.querySelector('.equip-comodato-badge');
+          const retornoCol = row.querySelector('.equip-retorno-col');
+          if (!dataInput) return;
+
+          if (retornoCol) retornoCol.style.display = '';
+
+          if (exigeRetorno) {
+            dataInput.style.display = 'block';
+            comodatoBadge.style.display = 'none';
+            dataInput.required = true;
+          } else {
+            dataInput.style.display = 'none';
+            comodatoBadge.style.display = 'inline';
+            dataInput.required = false;
+            dataInput.value = '';
+          }
+        });
+      }
+
+      // ========================================
+      // SEGMENTO CANAL - Derivação automática de canal_venda e canal_consumo
+      // ========================================
+      document.getElementById('segmento-canal')?.addEventListener('change', function () {
+        const selected = this.options[this.selectedIndex];
+        const canalVenda = selected?.dataset.canalVenda ?? '';
+        const canalConsumo = selected?.dataset.canalConsumo ?? '';
+        document.getElementById('canal-venda').value = canalVenda;
+        document.getElementById('canal-consumo').value = canalConsumo;
+        console.log(
+          'Segmento selecionado:',
+          this.value,
+          '| canal_venda:',
+          canalVenda,
+          '| canal_consumo:',
+          canalConsumo
+        );
+        // Autoselect tabela de preço compatível
+        autoSelectTabelaBySegmento(this.value);
+        // Verificar visibilidade do campo de data de retorno
+        checkEquipRetornoVisibility();
+      });
+
+      // ========================================
+      // SIGNATURES (CANVAS)
+      // ========================================
+
+      const signatureCanvases = {};
+
+      function initSignature(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let strokeCount = 0;
+
+        // Configurar canvas
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => {
+          isDrawing = true;
+          [lastX, lastY] = [e.offsetX, e.offsetY];
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+          if (!isDrawing) return;
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(e.offsetX, e.offsetY);
+          ctx.stroke();
+          [lastX, lastY] = [e.offsetX, e.offsetY];
+          strokeCount++;
+        });
+
+        canvas.addEventListener('mouseup', () => {
+          isDrawing = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+          isDrawing = false;
+        });
+
+        // Touch events
+        canvas.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          isDrawing = true;
+          const rect = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          [lastX, lastY] = [touch.clientX - rect.left, touch.clientY - rect.top];
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+          e.preventDefault();
+          if (!isDrawing) return;
+          const rect = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+          [lastX, lastY] = [x, y];
+          strokeCount++;
+        });
+
+        canvas.addEventListener('touchend', () => {
+          isDrawing = false;
+        });
+
+        signatureCanvases[canvasId] = { ctx, strokeCount };
+      }
+
+      function clearSignature(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        signatureCanvases[canvasId].strokeCount = 0;
+        showToast('info', 'Assinatura', 'Área de assinatura limpa');
+      }
+
+      function saveSignature(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const dataUrl = canvas.toDataURL('image/png');
+
+        // Salvar no state
+        const sigKey = canvasId.replace('sig-', '');
+        state.pedido.assinaturas[sigKey] = dataUrl;
+
+        showToast('success', 'Assinatura', 'Assinatura salva com sucesso');
+        addTimelineEvent('add', `Assinatura salva: ${sigKey}`);
+
+        // Atualizar checklist
+        updateChecklist();
+      }
+
+      // Handler do tipo de entrega
+      function onTipoEntregaChange(radio) {
+        document.getElementById('tipo-entrega-value').value = radio.value;
+        const label =
+          radio.value === 'ENTREGA_PROPRIA' ? 'Entrega pela Cervejaria' : 'Retirada pelo Cliente';
+        addTimelineEvent('update', `Tipo de entrega: ${label}`);
+      }
+
+      // ========================================
+      // DRAWER ASSISTENTE
+      // ========================================
+
+      function toggleDrawer() {
+        const drawer = document.getElementById('drawer');
+        const overlay = document.getElementById('drawer-overlay');
+
+        if (drawer.classList.contains('open')) {
+          closeDrawer();
+        } else {
+          openDrawer();
+        }
+      }
+
+      function openDrawer() {
+        document.getElementById('drawer').classList.add('open');
+        document.getElementById('drawer-overlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        state.ui.drawerOpen = true;
+
+        // Focus trap
+        document.getElementById('drawer').focus();
+      }
+
+      function closeDrawer() {
+        document.getElementById('drawer').classList.remove('open');
+        document.getElementById('drawer-overlay').classList.remove('open');
+        document.body.style.overflow = '';
+        state.ui.drawerOpen = false;
+      }
+
+      function autoFillAddress() {
+        const cep = document.getElementById('cliente-cep').value;
+        if (cep.length === 9) {
+          // MOCK: ViaCEP
+          document.getElementById('cliente-endereco').value = 'Rua Brigadeiro Franco, 3388';
+          document.getElementById('cliente-cidade').value = 'Curitiba - PR';
+          showToast('success', 'Endereço', 'Endereço preenchido automaticamente via CEP');
+          addTimelineEvent('update', 'Endereço preenchido via CEP');
+        } else {
+          showToast('warning', 'CEP', 'Digite um CEP válido (00000-000)');
+        }
+      }
+
+      function applyPromoCombo() {
+        // Buscar preço do produto no PRODUTOS_MOCK (B1 fix)
+        const produtoBase = PRODUTOS_MOCK.find((p) => p.nome === 'Chopp Pilsen 20L');
+        const precoBase = produtoBase ? produtoBase.preco : 180;
+        const descontoCombo = precoBase * 0.28; // ~28% de desconto no combo
+
+        // Adicionar combo promocional
+        addProductRow();
+        const newRow = document.getElementById('products-body').lastElementChild;
+        const produtoInput = newRow.querySelector('[data-field="produto"]');
+        const tipoInput = newRow.querySelector('[data-field="tipo"]');
+        const qtdeInput = newRow.querySelector('[data-field="qtde"]');
+        const precoInput = newRow.querySelector('[data-field="preco"]');
+        const descontoInput = newRow.querySelector('[data-field="desconto"]');
+        const operacaoSelect = newRow.querySelector('[data-field="operacao"]');
+
+        if (produtoInput) produtoInput.value = 'Combo Promocional Pilsen';
+        if (tipoInput) tipoInput.value = 'Barril 20L';
+        if (qtdeInput) qtdeInput.value = '10';
+        if (precoInput) precoInput.value = formatCurrency(precoBase);
+        if (descontoInput) descontoInput.value = formatCurrency(descontoCombo);
+        if (operacaoSelect) operacaoSelect.value = 'VENDA';
+
+        // Recalcular usando o campo de quantidade
+        if (qtdeInput) calculateRow(qtdeInput);
+        showToast('success', 'Combo', 'Combo promocional aplicado com sucesso');
+        addTimelineEvent('add', 'Combo promocional aplicado');
+      }
+
+      function validateOrder() {
+        const errors = [];
+
+        // Validar segmento de cliente (obrigatório para KPIs)
+        if (!document.getElementById('segmento-canal').value) {
+          errors.push('Segmento de Cliente é obrigatório');
+        }
+
+        // Validar tabela de preço
+        if (!document.getElementById('tabela-preco').value) {
+          errors.push('Tabela de Preços é obrigatória');
+        }
+
+        // Validar campos obrigatórios
+        if (!document.getElementById('cliente-razao').value) {
+          errors.push('Razão Social é obrigatória');
+        }
+
+        if (!document.getElementById('cliente-cnpj').value) {
+          errors.push('CNPJ/CPF é obrigatório');
+        }
+
+        // Validar se há pelo menos um produto
+        const produtosRows = document.querySelectorAll('#products-body tr');
+        if (produtosRows.length === 0) {
+          errors.push('Adicione pelo menos um produto');
+        } else {
+          // Validar linhas vazias - cada linha deve ter produto selecionado (A4 fix)
+          let linhasVazias = 0;
+          produtosRows.forEach((row, index) => {
+            const produtoInput = row.querySelector('[data-field="produto"]');
+            const qtdeInput = row.querySelector('[data-field="qtde"]');
+            const produtoNome = produtoInput?.value?.trim();
+            const qtde = parseFloat(qtdeInput?.value) || 0;
+
+            // Linha é válida se tem produto selecionado e quantidade > 0
+            if (!produtoNome || qtde <= 0) {
+              linhasVazias++;
+            }
+          });
+
+          // Se todas as linhas são vazias, erro
+          const linhasValidas = produtosRows.length - linhasVazias;
+          if (linhasValidas === 0) {
+            errors.push('Preencha pelo menos uma linha de produto com nome e quantidade');
+          }
+        }
+
+        if (errors.length > 0) {
+          showToast('error', 'Validação', errors[0]);
+          return false;
+        }
+
+        showToast('success', 'Validação', 'Pedido validado com sucesso!');
+        return true;
+      }
+
+      // ========================================
+      // SEARCH GLOBAL
+      // ========================================
+
+      const globalSearchInput = document.getElementById('global-search');
+
+      globalSearchInput.addEventListener(
+        'input',
+        debounce(function (e) {
+          const query = e.target.value.toLowerCase();
+
+          if (query.length < 2) {
+            // Limpar highlights
+            document.querySelectorAll('.highlight').forEach((el) => {
+              el.classList.remove('highlight');
+            });
+            return;
+          }
+
+          // Buscar em todos os inputs
+          const inputs = document.querySelectorAll('input:not([readonly]), textarea');
+          let matchCount = 0;
+
+          inputs.forEach((input) => {
+            const value = input.value.toLowerCase();
+            if (value.includes(query)) {
+              input.closest('td, .form-group')?.classList.add('highlight');
+              matchCount++;
+            } else {
+              input.closest('td, .form-group')?.classList.remove('highlight');
+            }
+          });
+
+          if (matchCount > 0) {
+            showToast('info', 'Busca', `${matchCount} resultados encontrados`);
+          }
+        }, 300)
+      );
+
+      // ========================================
+      // KEYBOARD SHORTCUTS
+      // ========================================
+
+      document.addEventListener('keydown', function (e) {
+        // Ctrl+K: Busca global
+        if (e.ctrlKey && e.key === 'k') {
+          e.preventDefault();
+          document.getElementById('global-search').focus();
+        }
+
+        // Ctrl+S: Salvar manual
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          saveManual();
+        }
+
+        // Ctrl+P: Imprimir
+        if (e.ctrlKey && e.key === 'p') {
+          e.preventDefault();
+          printOrder();
+        }
+
+        // Ctrl+N: Novo pedido
+        if (e.ctrlKey && e.key === 'n') {
+          e.preventDefault();
+          newOrder();
+        }
+
+        // Ctrl+E: Exportar JSON
+        if (e.ctrlKey && e.key === 'e') {
+          e.preventDefault();
+          exportJSON();
+        }
+
+        // Ctrl+I: Importar CSV
+        if (e.ctrlKey && e.key === 'i') {
+          e.preventDefault();
+          importCSV();
+        }
+
+        // Ctrl+Shift+A: Drawer assistente
+        if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+          e.preventDefault();
+          toggleDrawer();
+        }
+
+        // Ctrl+Shift+R: Resetar - usar cancelOrder para consistência (B2 fix)
+        if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+          e.preventDefault();
+          cancelOrder();
+        }
+
+        // F1: Ajuda
+        if (e.key === 'F1') {
+          e.preventDefault();
+          toggleDrawer();
+        }
+
+        // Esc: Fechar drawer
+        if (e.key === 'Escape') {
+          if (state.ui.drawerOpen) {
+            closeDrawer();
+          }
+        }
+      });
+
+      // ========================================
+      // AUTOSAVE & PERSISTÊNCIA
+      // ========================================
+
+      let autosaveTimer;
+
+      function startAutosave() {
+        autosaveTimer = setInterval(() => {
+          saveToLocalStorage();
+        }, state.config.autosaveInterval);
+      }
+
+      function saveToLocalStorage() {
+        try {
+          const data = {
+            pedido: state.pedido,
+            timestamp: new Date().toISOString(),
+          };
+          localStorage.setItem('cockpit_pedido', JSON.stringify(data));
+
+          document.getElementById('autosave-status').textContent = '💾 Salvo';
+          setTimeout(() => {
+            document.getElementById('autosave-status').textContent = '💾 Autosave';
+          }, 2000);
+        } catch (e) {
+          console.error('Erro ao salvar:', e);
+        }
+      }
+
+      function loadFromLocalStorage() {
+        try {
+          const data = localStorage.getItem('cockpit_pedido');
+          if (data) {
+            const parsed = JSON.parse(data);
+            state.pedido = parsed.pedido;
+
+            // Restaurar campos
+            if (state.pedido.id) {
+              document.getElementById('pedido-num').value = state.pedido.id;
+            }
+            if (state.pedido.data) {
+              document.getElementById('pedido-data').value = state.pedido.data;
+            }
+            // ... restaurar outros campos
+
+            showToast('success', 'Recuperação', 'Dados restaurados do autosave');
+            addTimelineEvent('update', 'Dados restaurados do autosave');
+          }
+        } catch (e) {
+          console.error('Erro ao carregar:', e);
+        }
+      }
+
+      function saveManual() {
+        saveToLocalStorage();
+        showToast('success', 'Salvo', 'Dados salvos manualmente');
+        addTimelineEvent('update', 'Dados salvos manualmente');
+      }
+
+      // ========================================
+      // EXPORT / IMPORT
+      // ========================================
+
+      function exportJSON() {
+        // Atualizar state com valores atuais dos campos antes de exportar
+        state.pedido.segmento_canal = document.getElementById('segmento-canal')?.value || '';
+        state.pedido.canal_venda = document.getElementById('canal-venda')?.value || '';
+        state.pedido.canal_consumo = document.getElementById('canal-consumo')?.value || '';
+        state.pedido.tabela_preco = document.getElementById('tabela-preco')?.value || '';
+        state.pedido.tipo_entrega =
+          document.getElementById('tipo-entrega-value')?.value || 'ENTREGA_PROPRIA';
+
+        const data = JSON.stringify(state.pedido, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pedido_${state.pedido.id || 'novo'}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        showToast('success', 'Exportação', 'Pedido exportado em JSON');
+        addTimelineEvent('update', 'Pedido exportado em JSON');
+      }
+
+      function importCSV() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        input.onchange = (e) => {
+          const file = e.target.files[0];
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const text = event.target.result;
+            const lines = text.split('\n');
+
+            // Parse CSV e adicionar produtos
+            lines.forEach((line, index) => {
+              if (index > 0 && line.trim()) {
+                const cols = line.split(',');
+                if (cols.length >= 2) {
+                  addProductRow();
+                  const newRow = document.getElementById('products-body').lastElementChild;
+                  const inputs = newRow.querySelectorAll('input');
+                  inputs[0].value = cols[0]; // Produto
+                  inputs[2].value = cols[1]; // Qtde
+                  if (cols[2]) inputs[3].value = formatCurrency(parseFloat(cols[2])); // Preço
+                  calculateRow(inputs[2]);
+                }
+              }
+            });
+
+            showToast('success', 'Importação', 'CSV importado com sucesso');
+            addTimelineEvent('update', 'Produtos importados via CSV');
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      }
+
+      // ========================================
+      // UTILITIES
+      // ========================================
+
+      function newOrder() {
+        if (confirm('Deseja criar um novo pedido? Os dados não salvos serão perdidos.')) {
+          resetForm();
+        }
+      }
+
+      function resetForm() {
+        // Limpar campos
+        document.querySelectorAll('input, textarea').forEach((input) => {
+          input.value = '';
+        });
+
+        // Resetar todos os selects do formulário (exceto os que têm valor default útil)
+        const selectsParaResetar = [
+          'segmento-canal',
+          'tabela-preco',
+          'condicao-pagamento',
+          'cliente-pagamento',
+        ];
+        selectsParaResetar.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.selectedIndex = 0;
+        });
+
+        // Resetar campos hidden derivados
+        ['canal-venda', 'canal-consumo', 'tipo-entrega-value'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.value = id === 'tipo-entrega-value' ? 'ENTREGA_PROPRIA' : '';
+          }
+        });
+
+        // Resetar radio de tipo de entrega para padrão
+        const radioEntregaPropria = document.getElementById('entrega-propria');
+        if (radioEntregaPropria) radioEntregaPropria.checked = true;
+
+        // Resetar span de percentual do desconto
+        const pctEl = document.getElementById('condicao-desconto-pct');
+        if (pctEl) pctEl.textContent = '0%';
+
+        // Resetar span de descrição da tabela de preço
+        const tabelaDescEl = document.getElementById('tabela-preco-desc');
+        if (tabelaDescEl) tabelaDescEl.textContent = '';
+
+        // Limpar tabelas
+        document.getElementById('products-body').innerHTML = '';
+        document.getElementById('equipment-body').innerHTML = '';
+
+        // Limpar assinaturas
+        Object.keys(signatureCanvases).forEach((canvasId) => {
+          clearSignature(canvasId);
+        });
+
+        // Reset state
+        state.pedido = {
+          id: null,
+          data: null,
+          vendedor: null,
+          observacoes: null,
+          segmento_canal: '',
+          canal_venda: '',
+          canal_consumo: '',
+          tabela_preco: '',
+          tipo_entrega: 'ENTREGA_PROPRIA',
+          cliente: {},
+          condicao: {},
+          itens: [],
+          equipamentos: [],
+          status: 'rascunho',
+          assinaturas: {},
+        };
+        state.ui.timeline = [];
+
+        // Gerar novo ID
+        generateOrderId();
+
+        // Reset UI
+        document.getElementById('kpi-total').textContent = 'R$ 0,00';
+        document.getElementById('kpi-quantity').textContent = '0 L';
+        document.getElementById('kpi-margin').textContent = '0%';
+        document.getElementById('kpi-status').textContent = 'Rascunho';
+
+        renderTimeline();
+        calculateTotals();
+
+        showToast('success', 'Reset', 'Formulário resetado com sucesso');
+        addTimelineEvent('update', 'Formulário resetado');
+      }
+
+      function generateOrderId() {
+        const timestamp = Date.now().toString(36).toUpperCase();
+        const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+        state.pedido.id = `PED-${timestamp}-${random}`;
+        document.getElementById('pedido-num').value = state.pedido.id;
+      }
+
+      function updateChecklist() {
+        const checks = [
+          document.getElementById('check-1').checked,
+          document.getElementById('check-2').checked,
+          document.getElementById('check-3').checked,
+          document.getElementById('check-4').checked,
+        ];
+
+        const completed = checks.filter((c) => c).length;
+        document.getElementById('checklist-completed').textContent = completed;
+      }
+
+      // Timer
+      let timerInterval;
+      let timerSeconds = 0;
+
+      function startTimer() {
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          const hours = Math.floor(timerSeconds / 3600);
+          const minutes = Math.floor((timerSeconds % 3600) / 60);
+          const seconds = timerSeconds % 60;
+
+          document.getElementById('kpi-timer').textContent =
+            `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }, 1000);
+      }
+
+      // ========================================
+      // INITIALIZATION
+      // ========================================
+
+      document.addEventListener('DOMContentLoaded', function () {
+        // ========================================
+        // INICIALIZAÇÃO DE DATALISTS (A3 fix)
+        // ========================================
+        initProdutosDatalist();
+
+        // ========================================
+        // INPUT MASKS EVENT LISTENERS
+        // ========================================
+
+        // Event listener para CNPJ/CPF - validação em tempo real
+        const cnpjInput = document.getElementById('cliente-cnpj');
+        if (cnpjInput) {
+          cnpjInput.addEventListener('input', function (e) {
+            const value = e.target.value.replace(/\D/g, '');
+
+            if (value.length <= 11) {
+              e.target.value = maskCPF(value);
+              e.target.classList.remove('invalid');
+              e.target.nextElementSibling.style.display = 'none';
+            } else {
+              e.target.value = maskCNPJ(value);
+
+              if (!validateCNPJ(e.target.value)) {
+                e.target.classList.add('invalid');
+                e.target.nextElementSibling.style.display = 'block';
+              } else {
+                e.target.classList.remove('invalid');
+                e.target.classList.add('valid');
+                e.target.nextElementSibling.style.display = 'none';
+              }
+            }
+          });
+        }
+
+        // Event listener para CEP
+        const cepInput = document.getElementById('cliente-cep');
+        if (cepInput) {
+          cepInput.addEventListener('input', function (e) {
+            e.target.value = maskCEP(e.target.value);
+
+            if (e.target.value.length === 9) {
+              e.target.classList.add('valid');
+              document.getElementById('cep-help').style.display = 'none';
+            }
+          });
+        }
+
+        // Event listener para telefone
+        const telefoneInput = document.getElementById('cliente-telefone');
+        if (telefoneInput) {
+          telefoneInput.addEventListener('input', function (e) {
+            e.target.value = maskPhone(e.target.value);
+          });
+        }
+
+        // Event listener para celular
+        const celularInput = document.getElementById('cliente-celular');
+        if (celularInput) {
+          celularInput.addEventListener('input', function (e) {
+            e.target.value = maskCell(e.target.value);
+          });
+        }
+
+        // ========================================
+        // FIM DOS INPUT MASKS EVENT LISTENERS
+        // ========================================
+
+        // Gerar ID do pedido
+        generateOrderId();
+
+        // ========================================
+        // INTEGRAÇÕES DE API - EVENT LISTENERS
+        // ========================================
+
+        // Event listener para CEP - preenchimento automático de endereço
+        if (cepInput) {
+          cepInput.addEventListener(
+            'blur',
+            debounce(async function (e) {
+              const cep = e.target.value.replace(/\D/g, ''); // Remove todos os não-dígitos
+              if (cep.length === 8) {
+                // Verifica se tem 8 dígitos
+                try {
+                  console.log('🔍 Buscando CEP:', cep);
+                  await IntegracoesAPI.preencherEnderecoPorCEP(cep);
+                } catch (error) {
+                  console.error('Erro ao preencher endereço:', error);
+                }
+              }
+            }, 300)
+          );
+        }
+
+        // Event listener para CNPJ - carregamento de dados da empresa
+        if (cnpjInput) {
+          cnpjInput.addEventListener(
+            'blur',
+            debounce(async function (e) {
+              const cnpj = e.target.value;
+              if (cnpj.replace(/\D/g, '').length === 14) {
+                try {
+                  await IntegracoesAPI.carregarDadosCNPJ(cnpj);
+                } catch (error) {
+                  console.error('Erro ao carregar dados CNPJ:', error);
+                }
+              }
+            }, 300)
+          );
+        }
+
+        // Event listener para data de entrega - verificação de feriados
+        const dataEntregaInput = document.getElementById('cond-entrega');
+        if (dataEntregaInput) {
+          dataEntregaInput.addEventListener('change', async function (e) {
+            const data = new Date(e.target.value);
+            try {
+              await IntegracoesAPI.verificarFeriadoEntrega(data);
+            } catch (error) {
+              console.error('Erro ao verificar feriado:', error);
+            }
+          });
+        }
+
+        // Event listener para botão de cálculo de rota (se existir)
+        const btnRota = document.getElementById('btn-rota');
+        if (btnRota) {
+          btnRota.addEventListener('click', async function () {
+            const cepOrigem = '80250030'; // CEP da cervejaria (Curitiba)
+            const cepDestino = document.getElementById('cliente-cep').value;
+
+            if (cepDestino && cepDestino.replace(/\D/g, '').length === 8) {
+              try {
+                const rota = await IntegracoesAPI.calcularRotaEntrega(cepOrigem, cepDestino);
+                showToast(
+                  'success',
+                  'Rota calculada',
+                  `Distância: ${rota.distanciaKm}km, Tempo: ${rota.duracaoHoras}h`
+                );
+              } catch (error) {
+                showToast('error', 'Erro', 'Não foi possível calcular a rota');
+              }
+            } else {
+              showToast('warning', 'Aviso', 'Digite um CEP válido do cliente');
+            }
+          });
+        }
+
+        // Carregar estados e cidades do IBGE ao iniciar
+        IntegracoesAPI.carregarEstadosECidades()
+          .then(() => console.log('✅ Estados e cidades carregados do IBGE'))
+          .catch((error) => console.error('❌ Erro ao carregar estados:', error));
+
+        // ========================================
+        // FIM DAS INTEGRAÇÕES DE API
+        // ========================================
+
+        // Set data atual
+        const now = new Date();
+        document.getElementById('pedido-data').value = now.toISOString().slice(0, 16);
+
+        // Inicializar assinaturas
+        initSignature('sig-responsavel');
+        initSignature('sig-cliente');
+        initSignature('sig-testemunha');
+
+        // Adicionar linhas iniciais
+        addProductRow();
+        addProductRow();
+        addProductRow();
+        addEquipRow();
+        addEquipRow();
+
+        // Carregar dados do localStorage
+        loadFromLocalStorage();
+
+        // Iniciar autosave
+        startAutosave();
+
+        // Iniciar timer
+        startTimer();
+
+        // Adicionar evento inicial
+        addTimelineEvent('add', 'Pedido iniciado');
+
+        // Mostrar toast de boas-vindas
+        setTimeout(() => {
+          showToast('info', 'Bem-vindo', 'Use Ctrl+K para buscar, Ctrl+S para salvar');
+        }, 1000);
+      });
+
+      // ========================================
+      // INTEGRAÇÕES DE API - COCKPIT DE PEDIDOS
+      // ========================================
+
+      /**
+       * =============================================================================
+       * 1. IBGE API - Localidades Brasileiras
+       * =============================================================================
+       */
+      const IBGE_API = {
+        baseUrl: 'https://servicodados.ibge.gov.br/api/v1/localidades',
+
+        async buscarEstados() {
+          try {
+            const response = await fetch(`${this.baseUrl}/estados`);
+            const data = await response.json();
+            return data.map((estado) => ({
+              sigla: estado.sigla,
+              nome: estado.nome,
+              regiao: estado.regiao.nome,
+            }));
+          } catch (error) {
+            console.error('Erro ao buscar estados:', error);
+            return [];
+          }
+        },
+
+        async buscarMunicipios(uf) {
+          try {
+            const response = await fetch(`${this.baseUrl}/estados/${uf}/municipios`);
+            const data = await response.json();
+            return data.map((municipio) => ({
+              nome: municipio.nome,
+              codigo_ibge: municipio.id,
+              microrregiao: municipio.microrregiao?.nome,
+            }));
+          } catch (error) {
+            console.error('Erro ao buscar municípios:', error);
+            return [];
+          }
+        },
+
+        async buscarMunicipioPorNome(nome, uf) {
+          const municipios = await this.buscarMunicipios(uf);
+          return municipios.find((m) => m.nome.toLowerCase() === nome.toLowerCase());
+        },
+      };
+
+      /**
+       * =============================================================================
+       * 2. ViaCEP API - Consulta de Endereços
+       * =============================================================================
+       */
+      const ViaCEP_API = {
+        baseUrl: 'https://viacep.com.br/ws',
+
+        async buscarEnderecoPorCEP(cep) {
+          try {
+            const cepLimpo = cep.replace(/\D/g, '');
+            if (cepLimpo.length !== 8) {
+              throw new Error('CEP inválido');
+            }
+
+            const response = await fetch(`${this.baseUrl}/${cepLimpo}/json/`);
+            const data = await response.json();
+
+            if (data.erro) {
+              throw new Error('CEP não encontrado');
+            }
+
+            return {
+              logradouro: data.logradouro,
+              complemento: data.complemento,
+              bairro: data.bairro,
+              cidade: data.localidade,
+              uf: data.sigla,
+              ibge: data.ibge,
+              gia: data.gia,
+              ddd: data.ddd,
+              siafi: data.siafi,
+            };
+          } catch (error) {
+            console.error('Erro ao buscar CEP:', error);
+            throw error;
+          }
+        },
+
+        async buscarCEPPorEndereco(uf, cidade, logradouro) {
+          try {
+            const cidadeFormatada = cidade.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const logradouroFormatado = logradouro.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+            const response = await fetch(
+              `${this.baseUrl}/${uf}/${cidadeFormatada}/${logradouroFormatado}/json/`
+            );
+            const data = await response.json();
+
+            if (!Array.isArray(data) || data.length === 0) {
+              throw new Error('Endereço não encontrado');
+            }
+
+            return data[0];
+          } catch (error) {
+            console.error('Erro ao buscar CEP por endereço:', error);
+            throw error;
+          }
+        },
+      };
+
+      /**
+       * =============================================================================
+       * 3. Brasil API - Documentos e CEP
+       * =============================================================================
+       */
+      const BrasilAPI = {
+        baseUrl: 'https://brasilapi.com.br/api',
+
+        async buscarCEP(cep) {
+          try {
+            const cepLimpo = cep.replace(/\D/g, '');
+            if (cepLimpo.length !== 8) {
+              throw new Error('CEP inválido');
+            }
+
+            const response = await fetch(`${this.baseUrl}/cep/v1/${cepLimpo}`);
+            const data = await response.json();
+
+            if (data.erro) {
+              throw new Error('CEP não encontrado');
+            }
+
+            return data;
+          } catch (error) {
+            console.error('Erro ao buscar CEP:', error);
+            throw error;
+          }
+        },
+
+        async buscarCNPJ(cnpj) {
+          try {
+            const cnpjLimpo = cnpj.replace(/\D/g, '');
+            if (cnpjLimpo.length !== 14) {
+              throw new Error('CNPJ inválido');
+            }
+
+            const response = await fetch(`${this.baseUrl}/cnpj/v1/${cnpjLimpo}`);
+            const data = await response.json();
+
+            if (data.erro || !data.razao_social) {
+              throw new Error('CNPJ não encontrado');
+            }
+
+            return {
+              razao_social: data.razao_social,
+              nome_fantasia: data.nome_fantasia,
+              cnpj: data.cnpj,
+              data_abertura: data.data_abertura,
+              situacao: data.descricao_situacao_cadastral,
+              logradouro: data.logradouro,
+              numero: data.numero,
+              complemento: data.complemento,
+              bairro: data.bairro,
+              municipio: data.municipio,
+              uf: data.uf,
+              cep: data.cep,
+              ddd_telefone_1: data.ddd_telefone_1,
+              telefone_1: data.telefone_1,
+              email: data.email,
+              cnae_fiscal: data.cnae_fiscal,
+              cnaes_secundarios: data.cnaes_secundarios,
+              capital_social: data.capital_social,
+              porte: data.porte,
+              natureza_juridica: data.natureza_juridica,
+            };
+          } catch (error) {
+            console.error('Erro ao buscar CNPJ:', error);
+            throw error;
+          }
+        },
+
+        async buscarFeriados(ano) {
+          try {
+            const response = await fetch(`${this.baseUrl}/feriados/v1/${ano}`);
+            const data = await response.json();
+            return data;
+          } catch (error) {
+            console.error('Erro ao buscar feriados:', error);
+            return [];
+          }
+        },
+
+        async verificarFeriado(data) {
+          const ano = data.getFullYear();
+          const feriados = await this.buscarFeriados(ano);
+          const dataFormatada = data.toISOString().split('T')[0];
+          return feriados.some((f) => f.date === dataFormatada);
+        },
+      };
+
+      /**
+       * =============================================================================
+       * 5. Cálculo de ICMS Interestadual (Sem API)
+       * =============================================================================
+       */
+      const ImpostosCalc = {
+        calcularICMSInterestadual(ufOrigem, ufDestino) {
+          const alquotas = {
+            'sul-norte': 12,
+            'sul-nordeste': 12,
+            'sul-centro-oeste': 7,
+            'sudeste-norte': 7,
+            'sudeste-nordeste': 12,
+            'sudeste-centro-oeste': 12,
+            default: 12,
+          };
+
+          const regioes = {
+            AC: 'norte',
+            AL: 'nordeste',
+            AP: 'norte',
+            AM: 'norte',
+            BA: 'nordeste',
+            CE: 'nordeste',
+            DF: 'centro-oeste',
+            ES: 'sudeste',
+            GO: 'centro-oeste',
+            MA: 'nordeste',
+            MT: 'centro-oeste',
+            MS: 'centro-oeste',
+            MG: 'sudeste',
+            PA: 'norte',
+            PB: 'nordeste',
+            PR: 'sul',
+            PE: 'nordeste',
+            PI: 'nordeste',
+            RJ: 'sudeste',
+            RN: 'nordeste',
+            RS: 'sul',
+            RO: 'norte',
+            RR: 'norte',
+            SC: 'sul',
+            SP: 'sudeste',
+            SE: 'nordeste',
+            TO: 'norte',
+          };
+
+          const regiaoOrigem = regioes[ufOrigem];
+          const regiaoDestino = regioes[ufDestino];
+
+          if (!regiaoOrigem || !regiaoDestino) {
+            return 12;
+          }
+
+          const chave = `${regiaoOrigem}-${regiaoDestino}`;
+          return alquotas['origem-destino'][chave] || alquotas['origem-destino']['default'];
+        },
+      };
+
+      /**
+       * =============================================================================
+       * 9. OpenStreetMap - Geolocalização
+       * =============================================================================
+       */
+      const OpenStreetMapAPI = {
+        baseUrl: 'https://nominatim.openstreetmap.org',
+
+        async geocodificar(endereco) {
+          try {
+            const response = await fetch(
+              `${this.baseUrl}/search?format=json&q=${encodeURIComponent(endereco)}&limit=1`
+            );
+            const data = await response.json();
+
+            if (!data || data.length === 0) {
+              throw new Error('Endereço não encontrado');
+            }
+
+            return {
+              lat: parseFloat(data[0].lat),
+              lon: parseFloat(data[0].lon),
+              display_name: data[0].display_name,
+              address: data[0].address,
+            };
+          } catch (error) {
+            console.error('Erro ao geocodificar:', error);
+            throw error;
+          }
+        },
+
+        async geocodificarInverso(lat, lon) {
+          try {
+            const response = await fetch(
+              `${this.baseUrl}/reverse?format=json&lat=${lat}&lon=${lon}`
+            );
+            const data = await response.json();
+
+            return {
+              address: data.address,
+              display_name: data.display_name,
+            };
+          } catch (error) {
+            console.error('Erro ao geocodificar inverso:', error);
+            throw error;
+          }
+        },
+
+        async calcularRota(origem, destino) {
+          try {
+            const response = await fetch(
+              `https://router.project-osrm.org/route/v1/driving/${origem.lon},${origem.lat};${destino.lon},${destino.lat}?overview=full&geometries=geojson`
+            );
+            const data = await response.json();
+
+            if (!data.routes || data.routes.length === 0) {
+              throw new Error('Rota não encontrada');
+            }
+
+            const route = data.routes[0];
+            return {
+              distancia: route.distance,
+              duracao: route.duration,
+              geometria: route.geometry,
+            };
+          } catch (error) {
+            console.error('Erro ao calcular rota:', error);
+            throw error;
+          }
+        },
+
+        gerarURLMapa(lat, lon, zoom = 15) {
+          return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}&zoom=${zoom}`;
+        },
+      };
+
+      /**
+       * =============================================================================
+       * MÓDULO DE INTEGRAÇÃO UNIFICADO
+       * =============================================================================
+       */
+      const IntegracoesAPI = {
+        async preencherEnderecoPorCEP(cep) {
+          try {
+            console.log('🔍 Iniciando busca do CEP:', cep);
+            const endereco = await ViaCEP_API.buscarEnderecoPorCEP(cep);
+            console.log('✅ Endereço retornado:', endereco);
+
+            // Preencher campo de endereço
+            const enderecoField = document.getElementById('cliente-endereco');
+            if (enderecoField && endereco.logradouro) {
+              enderecoField.value = endereco.logradouro;
+              console.log('✅ Endereço preenchido:', endereco.logradouro);
+            } else {
+              console.log('❌ Campo endereço não encontrado ou logradouro vazio');
+            }
+
+            // Preencher campo de cidade
+            const cidadeField = document.getElementById('cliente-cidade');
+            if (cidadeField && endereco.cidade) {
+              cidadeField.value = `${endereco.cidade} - ${endereco.uf}`;
+              console.log('✅ Cidade preenchida:', `${endereco.cidade} - ${endereco.uf}`);
+            } else {
+              console.log('❌ Campo cidade não encontrado ou cidade vazia');
+            }
+
+            // Atualizar classes de validação
+            const cepField = document.getElementById('cliente-cep');
+            if (cepField) {
+              cepField.classList.add('valid');
+              cepField.classList.remove('invalid');
+            }
+
+            showToast('success', 'Endereço', 'Endereço preenchido automaticamente via CEP');
+            addTimelineEvent('update', `Endereço preenchido via CEP: ${cep}`);
+
+            return endereco;
+          } catch (error) {
+            console.error('❌ Erro ao preencher endereço:', error);
+            showToast('error', 'Erro', error.message);
+
+            const cepField = document.getElementById('cliente-cep');
+            if (cepField) {
+              cepField.classList.add('invalid');
+            }
+
+            throw error;
+          }
+        },
+
+        async carregarDadosCNPJ(cnpj) {
+          try {
+            const dados = await BrasilAPI.buscarCNPJ(cnpj);
+
+            if (dados.razao_social) {
+              document.getElementById('cliente-razao').value = dados.razao_social;
+            }
+            if (dados.nome_fantasia) {
+              document.getElementById('cliente-fantasia').value = dados.nome_fantasia;
+            }
+            if (dados.logradouro) {
+              document.getElementById('cliente-endereco').value =
+                `${dados.logradouro}, ${dados.numero || ''}${dados.complemento ? ', ' + dados.complemento : ''}`;
+            }
+            if (dados.municipio) {
+              document.getElementById('cliente-cidade').value = `${dados.municipio} - ${dados.uf}`;
+            }
+            if (dados.cep) {
+              document.getElementById('cliente-cep').value = dados.cep.replace(
+                /(\d{5})(\d{3})/,
+                '$1-$2'
+              );
+            }
+            if (dados.telefone_1) {
+              document.getElementById('cliente-contato').value = dados.telefone_1;
+            }
+            if (dados.email) {
+              document.getElementById('cliente-email').value = dados.email;
+            }
+
+            document.getElementById('cliente-cnpj').classList.add('valid');
+            document.getElementById('cliente-cnpj').classList.remove('invalid');
+
+            showToast('success', 'CNPJ', 'Dados da empresa carregados com sucesso');
+            addTimelineEvent('update', `Dados carregados via CNPJ: ${cnpj}`);
+
+            return dados;
+          } catch (error) {
+            showToast('error', 'Erro', error.message);
+            document.getElementById('cliente-cnpj').classList.add('invalid');
+            throw error;
+          }
+        },
+
+        async verificarFeriadoEntrega(data) {
+          try {
+            const feriado = await BrasilAPI.verificarFeriado(data);
+
+            if (feriado) {
+              showToast('warning', 'Feriado', `A data escolhida é um feriado: ${feriado.name}`);
+              return {
+                isFeriado: true,
+                nome: feriado.name,
+                tipo: feriado.type,
+              };
+            }
+
+            return { isFeriado: false };
+          } catch (error) {
+            console.error('Erro ao verificar feriado:', error);
+            return { isFeriado: false, erro: error.message };
+          }
+        },
+
+        async calcularRotaEntrega(cepOrigem, cepDestino) {
+          try {
+            const enderecoOrigem = await ViaCEP_API.buscarEnderecoPorCEP(cepOrigem);
+            const enderecoDestino = await ViaCEP_API.buscarEnderecoPorCEP(cepDestino);
+
+            const coordsOrigem = await OpenStreetMapAPI.geocodificar(
+              `${enderecoOrigem.logradouro}, ${enderecoOrigem.cidade}`
+            );
+            const coordsDestino = await OpenStreetMapAPI.geocodificar(
+              `${enderecoDestino.logradouro}, ${enderecoDestino.cidade}`
+            );
+
+            const rota = await OpenStreetMapAPI.calcularRota(coordsOrigem, coordsDestino);
+
+            return {
+              distanciaKm: (rota.distancia / 1000).toFixed(2),
+              duracaoMinutos: Math.round(rota.duracao / 60),
+              duracaoHoras: (rota.duracao / 3600).toFixed(2),
+              urlMapa: OpenStreetMapAPI.gerarURLMapa(coordsDestino.lat, coordsDestino.lon),
+            };
+          } catch (error) {
+            console.error('Erro ao calcular rota:', error);
+            throw error;
+          }
+        },
+
+        async carregarEstadosECidades() {
+          try {
+            const estados = await IBGE_API.buscarEstados();
+
+            const datalistEstados = document.getElementById('datalist-estados');
+            if (datalistEstados) {
+              datalistEstados.innerHTML = estados
+                .map((estado) => `<option value="${estado.sigla}">${estado.nome}</option>`)
+                .join('');
+            }
+
+            const cidades = await IBGE_API.buscarMunicipios('PR');
+
+            const datalistCidades = document.getElementById('datalist-cidades');
+            if (datalistCidades) {
+              datalistCidades.innerHTML = cidades
+                .map((cidade) => `<option value="${cidade.nome}">${cidade.nome} - PR</option>`)
+                .join('');
+            }
+
+            return { estados, cidades };
+          } catch (error) {
+            console.error('Erro ao carregar estados e cidades:', error);
+            throw error;
+          }
+        },
+
+        async calcularImpostosProduto(produto, ufOrigem = 'PR', ufDestino) {
+          try {
+            const icms = ImpostosCalc.calcularICMSInterestadual(ufOrigem, ufDestino);
+
+            return {
+              icms: {
+                alquota: icms,
+                valor: (produto.valor * (icms / 100)).toFixed(2),
+              },
+              ipi: {
+                alquota: 0,
+                valor: 0,
+              },
+              pis: {
+                alquota: 0.65,
+                valor: (produto.valor * 0.0065).toFixed(2),
+              },
+              cofins: {
+                alquota: 3,
+                valor: (produto.valor * 0.03).toFixed(2),
+              },
+              total: (produto.valor * ((icms + 0.65 + 3) / 100)).toFixed(2),
+            };
+          } catch (error) {
+            console.error('Erro ao calcular impostos:', error);
+            throw error;
+          }
+        },
+      };
+
+      // ========================================
+      // PRINT ORDER SYSTEM - Documento A4 com 2 vias
+      // ========================================
+
+      function printOrder() {
+        // DADOS DO PEDIDO
+        const numPedido = document.getElementById('pedido-num')?.value || '—';
+        const dataEmissao = document.getElementById('pedido-data')?.value || '—';
+        const vendedor = document.getElementById('pedido-vendedor')?.value || '—';
+        const obsPedido = document.getElementById('pedido-obs')?.value || '';
+        const tipoEntrega =
+          document.getElementById('tipo-entrega-value')?.value || 'ENTREGA_PROPRIA';
+        const tipoEntregaLabel =
+          tipoEntrega === 'ENTREGA_PROPRIA' ? 'Entrega pela Cervejaria' : 'Retirada pelo Cliente';
+
+        // DADOS DO CLIENTE
+        const razao = document.getElementById('cliente-razao')?.value || '—';
+        const fantasia = document.getElementById('cliente-fantasia')?.value || '—';
+        const cnpj = document.getElementById('cliente-cnpj')?.value || '—';
+        const ie = document.getElementById('cliente-ie')?.value || '—';
+        const telefone = document.getElementById('cliente-telefone')?.value || '—';
+        const celular = document.getElementById('cliente-celular')?.value || '—';
+        const cep = document.getElementById('cliente-cep')?.value || '—';
+        const endereco = document.getElementById('cliente-endereco')?.value || '—';
+        const cidade = document.getElementById('cliente-cidade')?.value || '—';
+        const pagamento = document.getElementById('cliente-pagamento')?.value || '—';
+        const condicao = document.getElementById('condicao-pagamento')?.value || '—';
+        const descGlobal = document.getElementById('condicao-desconto')?.value || 'R$ 0,00';
+        const obsCondicao = document.getElementById('condicao-obs')?.value || '';
+        const segmento = document.getElementById('segmento-canal')?.value || '—';
+        const tabelaPreco = document.getElementById('tabela-preco')?.value || '—';
+
+        // TOTAIS
+        const grandTotal = document.getElementById('grand-total')?.textContent || 'R$ 0,00';
+        const totalQtde = document.getElementById('total-qtde')?.textContent || '0';
+        const totalDesc = document.getElementById('total-desc')?.textContent || 'R$ 0,00';
+
+        // PRODUTOS — coletar linhas da tabela (B3 fix: filtrar linhas vazias, usar data-field)
+        const produtosRows = [];
+        document.querySelectorAll('#products-body tr').forEach((tr) => {
+          const produtoInput = tr.querySelector('[data-field="produto"]');
+          const tipoInput = tr.querySelector('[data-field="tipo"]');
+          const operacaoSelect = tr.querySelector('[data-field="operacao"]');
+          const qtdeInput = tr.querySelector('[data-field="qtde"]');
+          const precoInput = tr.querySelector('[data-field="preco"]');
+          const descontoInput = tr.querySelector('[data-field="desconto"]');
+          const valorCol = tr.querySelector('[data-field="valor"]');
+
+          // Filtrar linhas vazias - produto deve ter nome e quantidade > 0
+          const produtoNome = produtoInput?.value?.trim();
+          const qtde = parseFloat(qtdeInput?.value) || 0;
+          if (!produtoNome || qtde <= 0) return;
+
+          produtosRows.push({
+            produto: produtoNome || '—',
+            tipoEq: tipoInput?.value || '—',
+            operacao: operacaoSelect?.value || '—',
+            qtde: qtdeInput?.value || '0',
+            preco: precoInput?.value || 'R$ 0,00',
+            desconto: descontoInput?.value || 'R$ 0,00',
+            valor: valorCol?.textContent || 'R$ 0,00',
+          });
+        });
+
+        // EQUIPAMENTOS — coletar linhas da tabela
+        const equipRows = [];
+        document.querySelectorAll('#equipment-body tr').forEach((tr) => {
+          const inputs = tr.querySelectorAll('input');
+          const diffEl = tr.querySelector('.num:last-child');
+          if (!inputs[0]?.value) return; // linha vazia
+          equipRows.push({
+            tipo: inputs[0]?.value || '—',
+            barril: inputs[1]?.value || '—',
+            saida: inputs[2]?.value || '0',
+            retorno: inputs[3]?.value || '0',
+            dataRet: inputs[4]?.value || '—',
+            diff: diffEl?.textContent || '0',
+          });
+        });
+
+        // ASSINATURAS (canvas → base64)
+        const sigResp = document.getElementById('sig-responsavel')?.toDataURL() || '';
+        const sigCli = document.getElementById('sig-cliente')?.toDataURL() || '';
+        const sigTest = document.getElementById('sig-testemunha')?.toDataURL() || '';
+
+        // DATA/HORA DE GERAÇÃO
+        const geradoEm = new Intl.DateTimeFormat('pt-BR', {
+          dateStyle: 'short',
+          timeStyle: 'medium',
+        }).format(new Date());
+
+        // Montar e abrir o documento
+        const html = buildPrintHTML({
+          numPedido,
+          dataEmissao,
+          vendedor,
+          obsPedido,
+          tipoEntregaLabel,
+          razao,
+          fantasia,
+          cnpj,
+          ie,
+          telefone,
+          celular,
+          cep,
+          endereco,
+          cidade,
+          pagamento,
+          condicao,
+          descGlobal,
+          obsCondicao,
+          segmento,
+          tabelaPreco,
+          grandTotal,
+          totalQtde,
+          totalDesc,
+          produtosRows,
+          equipRows,
+          sigResp,
+          sigCli,
+          sigTest,
+          geradoEm,
+        });
+
+        const win = window.open('', '_blank', 'width=900,height=700');
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        setTimeout(() => {
+          win.print();
+          win.addEventListener('afterprint', () => win.close());
+        }, 500); // aguarda fonts carregarem
+      }
+
+      function buildPrintHTML(data) {
+        return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Pedido ${data.numPedido}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Barlow', sans-serif;
+      font-size: 10px;
+      color: #1c2b3a;
+      background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm;
+    }
+    .page { width: 100%; }
+    .via {
+      width: 100%;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      margin-bottom: 4mm;
+    }
+    .via + .via { margin-top: 4mm; }
+    .separador-via {
+      text-align: center;
+      font-size: 9px;
+      color: #666;
+      border-top: 1px dashed #999;
+      border-bottom: 1px dashed #999;
+      padding: 2mm 0;
+      margin: 3mm 0;
+      letter-spacing: 1px;
+    }
+    .doc-header {
+      background: #1a3a5c !important;
+      color: #fff;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 4px 4px 0 0;
+    }
+    .doc-header .empresa-nome {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+    .doc-header .empresa-info { font-size: 8px; opacity: 0.85; line-height: 1.4; }
+    .doc-header .pedido-badge { text-align: right; }
+    .doc-header .pedido-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      color: #c8a84b;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .doc-header .pedido-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .doc-header .via-badge {
+      font-size: 8px;
+      background: rgba(200,168,75,0.25);
+      color: #c8a84b;
+      border: 1px solid #c8a84b;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-top: 3px;
+      display: inline-block;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border: 1px solid #b0bec5;
+      border-top: none;
+    }
+    .info-col {
+      padding: 6px 8px;
+    }
+    .info-col:first-child {
+      border-right: 1px solid #b0bec5;
+    }
+    .info-col-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 9px;
+      font-weight: 700;
+      color: #2c5f8a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #c8a84b;
+      margin-bottom: 4px;
+      padding-bottom: 2px;
+    }
+    .info-row {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 2px;
+      line-height: 1.3;
+    }
+    .info-label {
+      font-size: 8px;
+      font-weight: 600;
+      color: #2c5f8a;
+      min-width: 68px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+    .info-value {
+      font-size: 9px;
+      color: #1c2b3a;
+      word-break: break-word;
+    }
+    .info-obs {
+      grid-column: span 2;
+      border-top: 1px solid #b0bec5;
+      padding: 4px 8px;
+      font-size: 8px;
+      color: #555;
+    }
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      background: #2c5f8a !important;
+      padding: 4px 8px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.5px;
+    }
+    .doc-table thead th {
+      background: #1a3a5c !important;
+      color: #fff;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      padding: 4px 5px;
+      text-align: left;
+      border-right: 1px solid rgba(255,255,255,0.15);
+    }
+    .doc-table thead th:last-child { border-right: none; }
+    .doc-table tbody tr:nth-child(even) { background: #f5f8fb !important; }
+    .doc-table tbody td {
+      padding: 3px 5px;
+      border-bottom: 1px solid #e0e0e0;
+      border-right: 1px solid #e8e8e8;
+      vertical-align: middle;
+    }
+    .doc-table tbody td:last-child { border-right: none; }
+    .doc-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .doc-table .total-row td {
+      background: #eef4ff !important;
+      font-weight: 600;
+      font-size: 8.5px;
+      padding: 4px 5px;
+      border-top: 2px solid #b0bec5;
+    }
+    .doc-table .grand-total-row td {
+      background: #1a3a5c !important;
+      color: #fff;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 5px 8px;
+    }
+    .diff-pos { color: #c62828; font-weight: 700; }
+    .diff-zero { color: #2e7d32; font-weight: 700; }
+    .assinaturas {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+      border: 1px solid #b0bec5;
+      padding: 6px 8px;
+    }
+    .sig-box { text-align: center; }
+    .sig-img {
+      width: 100%;
+      height: 40px;
+      object-fit: contain;
+      display: block;
+    }
+    .sig-line {
+      border-bottom: 1px solid #333;
+      height: 40px;
+      margin-bottom: 2px;
+    }
+    .sig-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 8px;
+      font-weight: 700;
+      color: #2c5f8a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 3px;
+    }
+    .sig-data {
+      font-size: 7.5px;
+      color: #666;
+      margin-top: 2px;
+    }
+    .doc-footer {
+      text-align: center;
+      font-size: 7.5px;
+      color: #888;
+      margin-top: 4px;
+      padding-top: 3px;
+      border-top: 1px solid #e0e0e0;
+    }
+    @media print {
+      @page { size: A4 portrait; margin: 8mm 10mm; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .via { page-break-inside: avoid; break-inside: avoid; }
+      .separador-via { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    ${buildVia(data, '1ª VIA - EMPRESA')}
+    <div class="separador-via">✂ VIA DO CLIENTE</div>
+    ${buildVia(data, '2ª VIA - CLIENTE')}
+  </div>
+</body>
+</html>`;
+      }
+
+      function buildVia(data, viaLabel) {
+        // Montar HTML de produtos
+        const produtosHTML =
+          data.produtosRows.length === 0
+            ? `<tr><td colspan="7" style="text-align:center;color:#999;padding:8px">Nenhum produto adicionado</td></tr>`
+            : data.produtosRows
+                .map(
+                  (p) => `
+          <tr>
+            <td>${p.produto}</td>
+            <td>${p.tipoEq}</td>
+            <td>${p.operacao}</td>
+            <td class="num">${p.qtde}</td>
+            <td class="num">${p.preco}</td>
+            <td class="num">${p.desconto}</td>
+            <td class="num">${p.valor}</td>
+          </tr>`
+                )
+                .join('');
+
+        // Montar HTML de equipamentos (só se houver)
+        const equipHTML =
+          data.equipRows.length === 0
+            ? ''
+            : `
+      <div class="section-title">Equipamentos / Retorno</div>
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th>Tipo de Equipamento</th>
+            <th>Barril</th>
+            <th class="num">Qtde Saída</th>
+            <th class="num">Qtde Retorno</th>
+            <th>Prev. Retorno</th>
+            <th class="num">Diferença</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.equipRows
+            .map((e) => {
+              const diff = (parseInt(e.saida) || 0) - (parseInt(e.retorno) || 0);
+              const diffClass = diff > 0 ? 'diff-pos' : 'diff-zero';
+              return `<tr>
+              <td>${e.tipo}</td>
+              <td>${e.barril}</td>
+              <td class="num">${e.saida}</td>
+              <td class="num">${e.retorno}</td>
+              <td>${e.dataRet}</td>
+              <td class="num ${diffClass}">${diff}</td>
+            </tr>`;
+            })
+            .join('')}
+        </tbody>
+      </table>`;
+
+        // Função helper para assinaturas
+        function buildSig(dataUrl, label) {
+          const hasSignature = dataUrl && dataUrl.length > 200;
+          const imgOrLine = hasSignature
+            ? `<img class="sig-img" src="${dataUrl}" alt="Assinatura ${label}">`
+            : `<div class="sig-line"></div>`;
+          return `
+        <div class="sig-box">
+          ${imgOrLine}
+          <div class="sig-label">${label}</div>
+          <div class="sig-data">Data: ___/___/______</div>
+        </div>`;
+        }
+
+        return `
+    <div class="via">
+      <!-- CABEÇALHO -->
+      <div class="doc-header">
+        <div>
+          <div class="empresa-nome">🍺 [NOME DA EMPRESA]</div>
+          <div class="empresa-info">[CNPJ] · [IE] · [FONE]</div>
+          <div class="empresa-info">[ENDEREÇO COMPLETO]</div>
+        </div>
+        <div class="pedido-badge">
+          <div class="pedido-label">PEDIDO</div>
+          <div class="pedido-num">${data.numPedido}</div>
+          <div class="via-badge">${viaLabel}</div>
+        </div>
+      </div>
+
+      <!-- GRID DE INFORMAÇÕES -->
+      <div class="info-grid">
+        <div class="info-col">
+          <div class="info-col-title">Dados do Pedido</div>
+          <div class="info-row"><span class="info-label">Pedido:</span><span class="info-value">${data.numPedido}</span></div>
+          <div class="info-row"><span class="info-label">Emissão:</span><span class="info-value">${data.dataEmissao}</span></div>
+          <div class="info-row"><span class="info-label">Vendedor:</span><span class="info-value">${data.vendedor}</span></div>
+          <div class="info-row"><span class="info-label">Entrega:</span><span class="info-value">${data.tipoEntregaLabel}</span></div>
+          <div class="info-row"><span class="info-label">Pagamento:</span><span class="info-value">${data.pagamento}</span></div>
+          <div class="info-row"><span class="info-label">Condição:</span><span class="info-value">${data.condicao}</span></div>
+          <div class="info-row"><span class="info-label">Desconto:</span><span class="info-value">${data.descGlobal}</span></div>
+          <div class="info-row"><span class="info-label">Tabela:</span><span class="info-value">${data.tabelaPreco}</span></div>
+          <div class="info-row"><span class="info-label">Segmento:</span><span class="info-value">${data.segmento}</span></div>
+        </div>
+        <div class="info-col">
+          <div class="info-col-title">Dados do Cliente</div>
+          <div class="info-row"><span class="info-label">Razão Social:</span><span class="info-value">${data.razao}</span></div>
+          <div class="info-row"><span class="info-label">Nome Fantasia:</span><span class="info-value">${data.fantasia}</span></div>
+          <div class="info-row"><span class="info-label">CNPJ/CPF:</span><span class="info-value">${data.cnpj}</span></div>
+          <div class="info-row"><span class="info-label">IE/RG:</span><span class="info-value">${data.ie}</span></div>
+          <div class="info-row"><span class="info-label">Endereço:</span><span class="info-value">${data.endereco}</span></div>
+          <div class="info-row"><span class="info-label">CEP:</span><span class="info-value">${data.cep}</span></div>
+          <div class="info-row"><span class="info-label">Cidade:</span><span class="info-value">${data.cidade}</span></div>
+          <div class="info-row"><span class="info-label">Fone:</span><span class="info-value">${data.telefone}</span></div>
+          <div class="info-row"><span class="info-label">Celular:</span><span class="info-value">${data.celular}</span></div>
+        </div>
+        ${data.obsCondicao ? `<div class="info-obs"><strong>Observações:</strong> ${data.obsCondicao}</div>` : ''}
+      </div>
+
+      <!-- TABELA DE PRODUTOS -->
+      <div class="section-title">Produtos</div>
+      <table class="doc-table produtos-table">
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Tipo Equip.</th>
+            <th>Operação</th>
+            <th class="num">Qtde (L)</th>
+            <th class="num">Preço Unit.</th>
+            <th class="num">Desconto</th>
+            <th class="num">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${produtosHTML}
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="3" style="text-align:right">TOTAIS</td>
+            <td class="num">${data.totalQtde}</td>
+            <td></td>
+            <td class="num">${data.totalDesc}</td>
+            <td class="num">${data.grandTotal}</td>
+          </tr>
+          <tr class="grand-total-row">
+            <td colspan="6" style="text-align:right">VALOR TOTAL DO PEDIDO</td>
+            <td class="num">${data.grandTotal}</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      ${equipHTML}
+
+      <!-- ASSINATURAS -->
+      <div class="assinaturas">
+        ${buildSig(data.sigResp, 'RESPONSÁVEL')}
+        ${buildSig(data.sigCli, 'CLIENTE')}
+        ${buildSig(data.sigTest, 'TESTEMUNHA')}
+      </div>
+
+      <!-- RODAPÉ -->
+      <div class="doc-footer">
+        Gerado em ${data.geradoEm} · [NOME DO SISTEMA] · [NOME DA EMPRESA]
+      </div>
+    </div>`;
+      }
+
+      // ========================================
+      // FEATURES UX ADICIONAIS
+      // ========================================
+
+      // Toggle de seções colapsáveis
+      function toggleSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        const isCollapsed = section.classList.toggle('collapsed');
+        const h3 = section.querySelector('.section-subtitle');
+        if (h3) h3.setAttribute('aria-expanded', String(!isCollapsed));
+        addTimelineEvent(
+          'update',
+          `Seção ${isCollapsed ? 'recolhida' : 'expandida'}: ${sectionId}`
+        );
+      }
+
+      // Cancelar pedido com confirmação
+      function cancelOrder() {
+        // Verificar se há dados preenchidos antes de perguntar
+        const hasData =
+          document.getElementById('cliente-razao')?.value?.trim() ||
+          document.getElementById('cliente-cnpj')?.value?.trim() ||
+          document.querySelectorAll('#products-body tr').length > 0;
+
+        if (!hasData) {
+          // Formulário vazio: reset silencioso sem confirmação
+          resetForm();
+          showToast('info', 'Cancelado', 'Pedido cancelado — formulário limpo');
+          return;
+        }
+
+        // Diálogo de confirmação
+        const confirmed = confirm(
+          '⚠️ Cancelar Pedido\n\n' +
+            'Todas as informações preenchidas serão perdidas.\n\n' +
+            'Deseja realmente cancelar e descartar as alterações?'
+        );
+        if (confirmed) {
+          resetForm();
+          showToast(
+            'warning',
+            'Pedido Cancelado',
+            'Pedido descartado. Formulário resetado para novo pedido.'
+          );
+          addTimelineEvent('remove', 'Pedido cancelado pelo usuário');
+        }
+      }
+
+      // Quick jump para seções
+      function scrollToSection(sectionClass) {
+        const el = document.querySelector(`.${sectionClass}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Highlight temporário
+          el.style.outline = `2px solid var(--gold)`;
+          setTimeout(() => {
+            el.style.outline = '';
+          }, 1500);
+        }
+      }
+
+      // Toggle do painel de atalhos
+      function toggleShortcutsPanel() {
+        const body = document.getElementById('shortcuts-panel-body');
+        const btn = document.getElementById('shortcuts-toggle-btn');
+        if (!body) return;
+        const isCollapsed = body.classList.toggle('collapsed');
+        if (btn) {
+          btn.textContent = isCollapsed ? '▼' : '▲';
+          btn.setAttribute(
+            'aria-label',
+            isCollapsed ? 'Expandir painel de atalhos' : 'Recolher painel de atalhos'
+          );
+        }
+      }
+
+      // ── SISTEMA DE TAGS ──────────────────────────────────────────────
+      const TAGS_PREDEFINIDAS = [
+        { id: 'VIP', label: '⭐ VIP', color: '#c8a84b' },
+        { id: 'NOVO_CLIENTE', label: '🆕 Novo Cliente', color: '#1565c0' },
+        { id: 'REATIVADO', label: '🔄 Reativado', color: '#2e7d32' },
+        { id: 'ALTA_SAZON', label: '📅 Alta Sazonalidade', color: '#f57c00' },
+        { id: 'PGTO_PONTUAL', label: '✅ Pgto Pontual', color: '#2e7d32' },
+        { id: 'INADIMPLENTE', label: '⚠️ Inadimplente', color: '#c62828' },
+        { id: 'EVENTO_ESPEC', label: '🎉 Evento Especial', color: '#7b1fa2' },
+        { id: 'FRANQUIA', label: '🏪 Franquia', color: '#0277bd' },
+      ];
+
+      // Inicializar tags no state
+      if (!state.pedido.tags) state.pedido.tags = [];
+
+      function renderTagsPredefined() {
+        const container = document.getElementById('tags-predefined');
+        if (!container) return;
+        container.innerHTML = TAGS_PREDEFINIDAS.map((tag) => {
+          const isActive = state.pedido.tags.includes(tag.id);
+          if (isActive) return '';
+          return `<button type="button" class="tag-pill inactive"
+                    onclick="toggleTag('${tag.id}', '${tag.label}', '${tag.color}')"
+                    title="Clique para adicionar tag"
+                    data-tag-id="${tag.id}">
+                    ${tag.label}
+                  </button>`;
+        }).join('');
+      }
+
+      function renderTagsActive() {
+        const container = document.getElementById('tags-active');
+        if (!container) return;
+        container.innerHTML = state.pedido.tags
+          .map((tagId) => {
+            const predefined = TAGS_PREDEFINIDAS.find((t) => t.id === tagId);
+            const label = predefined ? predefined.label : tagId;
+            const color = predefined ? predefined.color : '#1a3a5c';
+            return `<span class="tag-pill active"
+                    style="background:${color}; border-color:${color};"
+                    data-tag-id="${tagId}">
+                    ${label}
+                    <span class="tag-remove"
+                          onclick="removeTag('${tagId}')"
+                          role="button"
+                          tabindex="0"
+                          aria-label="Remover tag ${label}">×</span>
+                  </span>`;
+          })
+          .join('');
+      }
+
+      function toggleTag(tagId, label, color) {
+        if (state.pedido.tags.includes(tagId)) {
+          removeTag(tagId);
+        } else {
+          state.pedido.tags.push(tagId);
+          addTimelineEvent('add', `Tag adicionada: ${label}`);
+          renderTagsPredefined();
+          renderTagsActive();
+        }
+      }
+
+      function removeTag(tagId) {
+        state.pedido.tags = state.pedido.tags.filter((t) => t !== tagId);
+        renderTagsPredefined();
+        renderTagsActive();
+      }
+
+      function addCustomTag(label) {
+        const clean = label.trim().toUpperCase().replace(/\s+/g, '_').slice(0, 30);
+        if (!clean || state.pedido.tags.includes(clean)) return;
+        state.pedido.tags.push(clean);
+        // Adicionar também a TAGS_PREDEFINIDAS com cor padrão para renderização
+        if (!TAGS_PREDEFINIDAS.find((t) => t.id === clean)) {
+          TAGS_PREDEFINIDAS.push({ id: clean, label: `🏷️ ${label.trim()}`, color: '#455a64' });
+        }
+        addTimelineEvent('add', `Tag customizada adicionada: ${label}`);
+        renderTagsPredefined();
+        renderTagsActive();
+      }
+
+      // Listener do input customizado de tags
+      document.getElementById('tags-custom-input')?.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && this.value.trim()) {
+          e.preventDefault();
+          addCustomTag(this.value);
+          this.value = '';
+        }
+      });
+
+      // Inicializar tags no DOM
+      renderTagsPredefined();
+      renderTagsActive();
+
+      // ========================================
+      // MODIFICAÇÕES EM FUNÇÕES EXISTENTES
+      // ========================================
+
+      // Modificar generateOrderId para atualizar breadcrumb
+      const originalGenerateOrderId = generateOrderId;
+      generateOrderId = function () {
+        originalGenerateOrderId();
+        const bc = document.getElementById('breadcrumb-pedido-label');
+        if (bc) bc.textContent = `Pedido ${state.pedido.id}`;
+      };
+
+      // Modificar resetForm para incluir novos campos
+      const originalResetForm = resetForm;
+      resetForm = function () {
+        originalResetForm();
+
+        // Reset breadcrumb
+        const bc = document.getElementById('breadcrumb-pedido-label');
+        if (bc) bc.textContent = 'Novo Pedido';
+
+        // Reset segmento outros
+        const outrosWrap = document.getElementById('segmento-outros-wrap');
+        if (outrosWrap) outrosWrap.style.display = 'none';
+        const outrosInput = document.getElementById('segmento-outros-texto');
+        if (outrosInput) {
+          outrosInput.value = '';
+          outrosInput.required = false;
+        }
+
+        // Reset tags
+        state.pedido.tags = [];
+        renderTagsPredefined();
+        renderTagsActive();
+
+        // Expandir seções colapsáveis
+        document.querySelectorAll('.form-section.collapsible.collapsed').forEach((s) => {
+          s.classList.remove('collapsed');
+          const h3 = s.querySelector('.section-subtitle');
+          if (h3) h3.setAttribute('aria-expanded', 'true');
+        });
+      };
+
+      // Modificar validateOrder para validar segmento OUTROS
+      const originalValidateOrder = validateOrder;
+      validateOrder = function () {
+        const errors = [];
+
+        // Validar segmento de cliente (obrigatório para KPIs)
+        if (!document.getElementById('segmento-canal').value) {
+          errors.push('Segmento de Cliente é obrigatório');
+        }
+
+        // Validar especificação do segmento OUTROS
+        if (document.getElementById('segmento-canal').value === 'OUTROS') {
+          const outrosTexto = document.getElementById('segmento-outros-texto')?.value?.trim();
+          if (!outrosTexto) errors.push('Especifique o segmento "Outros"');
+        }
+
+        // Validar tabela de preço
+        if (!document.getElementById('tabela-preco').value) {
+          errors.push('Tabela de Preços é obrigatória');
+        }
+
+        // Validar campos obrigatórios
+        if (!document.getElementById('cliente-razao').value) {
+          errors.push('Razão Social é obrigatória');
+        }
+
+        if (!document.getElementById('cliente-cnpj').value) {
+          errors.push('CNPJ/CPF é obrigatório');
+        }
+
+        if (document.querySelectorAll('#products-body tr').length === 0) {
+          errors.push('Adicione pelo menos um produto');
+        }
+
+        if (errors.length > 0) {
+          showToast('error', 'Validação', errors[0]);
+          return false;
+        }
+
+        showToast('success', 'Validação', 'Pedido validado com sucesso!');
+        return true;
+      };
+
+      // Modificar exportJSON para incluir segmento_outros
+      const originalExportJSON = exportJSON;
+      exportJSON = function () {
+        // Atualizar state com valores atuais dos campos antes de exportar
+        state.pedido.segmento_canal = document.getElementById('segmento-canal')?.value || '';
+        state.pedido.canal_venda = document.getElementById('canal-venda')?.value || '';
+        state.pedido.canal_consumo = document.getElementById('canal-consumo')?.value || '';
+        state.pedido.tabela_preco = document.getElementById('tabela-preco')?.value || '';
+        state.pedido.tipo_entrega =
+          document.getElementById('tipo-entrega-value')?.value || 'ENTREGA_PROPRIA';
+        // Adicionar segmento_outros
+        state.pedido.segmento_outros =
+          document.getElementById('segmento-outros-texto')?.value || '';
+
+        const data = JSON.stringify(state.pedido, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pedido_${state.pedido.id || 'novo'}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        showToast('success', 'Exportação', 'Pedido exportado em JSON');
+        addTimelineEvent('update', 'Pedido exportado em JSON');
+      };
+
+      // Adicionar OUTROS ao map de autoSelectTabelaBySegmento
+      const originalAutoSelectTabelaBySegmento = autoSelectTabelaBySegmento;
+      autoSelectTabelaBySegmento = function (segmento) {
+        const map = {
+          CONSUMIDOR_FINAL: 'PADRAO',
+          TAPROOM: 'PADRAO',
+          DISTRIBUIDOR: 'ATACADO',
+          FOOD_SERVICE: 'FOOD_SVC',
+          VAREJO: 'PADRAO',
+          ATACAREJO: 'ATACADO',
+          EVENTOS: 'PROMO',
+          INSTITUCIONAL: 'PADRAO',
+          CERVEJARIA: 'ATACADO',
+          OUTROS: 'PADRAO',
+        };
+        const tabelaId = map[segmento];
+        const tabelaSelect = document.getElementById('tabela-preco');
+        if (tabelaSelect && tabelaId) {
+          tabelaSelect.value = tabelaId;
+          onTabelaPrecoChange(tabelaSelect);
+        }
+      };
+
+      // Modificar listener do segmento-canal para mostrar/ocultar campo Outros
+      document.getElementById('segmento-canal')?.addEventListener('change', function () {
+        // Mostrar/ocultar campo de especificação para "Outros"
+        const outrosWrap = document.getElementById('segmento-outros-wrap');
+        if (outrosWrap) {
+          outrosWrap.style.display = this.value === 'OUTROS' ? 'block' : 'none';
+          const outrosInput = document.getElementById('segmento-outros-texto');
+          if (outrosInput) {
+            outrosInput.required = this.value === 'OUTROS';
+            if (this.value !== 'OUTROS') outrosInput.value = '';
+          }
+        }
+      });
+
+      // ========================================
+      // FIM DO SCRIPT
+      // ========================================
+    </script>
+
+    <!-- =============================================================================
+     SCRIPT DE TESTES DAS INTEGRAÇÕES
+============================================================================= -->
+    <script src="teste-api.js"></script>
+  </body>
+</html>
